@@ -1,0 +1,2359 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบบันทึกความต้องการโครงสร้างพื้นฐานและครุภัณฑ์ (Cloud Online) | เทศบาลเมืองดอนแก้ว</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script>
+tailwind.config = {
+  theme: { extend: {
+    fontFamily: { sans: ['Sarabun', 'sans-serif'] },
+    colors: {
+      navy:  { 900:'#071A33', 800:'#0B2545', 700:'#13315C', 600:'#1B4079' },
+      sky2:  { 600:'#1A73A8', 500:'#2389C4', 100:'#E3F2FB' },
+      gold:  { 500:'#C9A227', 400:'#D9B95C', 200:'#F1E2B3', 50:'#FBF6E7' }
+    }
+  }}
+}
+</script>
+<style type="text/tailwindcss">
+  @layer components {
+    .card  { @apply bg-white rounded-2xl shadow-sm border border-slate-200 p-5; }
+    .inp   { @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-sky2-500/40 focus:border-sky2-500 transition; }
+    .lbl   { @apply block text-sm font-medium text-slate-700 mb-1; }
+    .hint  { @apply text-xs text-slate-400 mt-1; }
+    .btn   { @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition active:scale-[.98] cursor-pointer; }
+    .btn-navy { @apply btn bg-navy-800 text-white hover:bg-navy-700; }
+    .btn-gold { @apply btn bg-gold-400 text-navy-900 hover:bg-gold-500; }
+    .btn-sky  { @apply btn bg-sky2-600 text-white hover:bg-sky2-500; }
+    .btn-line { @apply btn border border-slate-300 bg-white text-slate-700 hover:bg-slate-50; }
+    .btn-red  { @apply btn border border-red-200 bg-red-50 text-red-600 hover:bg-red-100; }
+    .card-h { @apply flex items-center gap-3 text-lg font-bold text-navy-800 mb-4; }
+    .step  { @apply w-8 h-8 rounded-full bg-navy-800 text-gold-400 grid place-items-center text-sm font-bold shrink-0; }
+    .chip  { @apply flex items-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:border-sky2-500/60 h-full; }
+    .ichip { @apply rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs text-slate-600 hover:border-sky2-500 hover:text-navy-800 transition text-left cursor-pointer; }
+    .ichip.on { @apply bg-navy-800 text-white border-navy-800; }
+    .tabbtn{ @apply flex items-center gap-2 px-4 py-3 text-sm font-medium text-slate-300 border-b-2 border-transparent whitespace-nowrap hover:text-white transition cursor-pointer; }
+    .tabbtn.active { @apply text-white border-gold-400; }
+    .invalid { @apply border-red-500 ring-2 ring-red-200; }
+  }
+</style>
+<style>
+  body { font-family: 'Sarabun', sans-serif; }
+  .rpt { width:100%; border-collapse:collapse; font-size:12.5px; }
+  .rpt th, .rpt td { border:1px solid #9aa5b8; padding:5px 6px; vertical-align:top; }
+  .rpt th { background:#0B2545; color:#fff; font-weight:600; text-align:center; }
+  .rpt .grp td { background:#F1E2B3; font-weight:600; color:#0B2545; }
+  .rpt .tot td { background:#E3F2FB; font-weight:700; }
+  .print-page + .print-page { margin-top:2.5rem; padding-top:2.5rem; border-top:2px dashed #cbd5e1; }
+  input[type=number]::-webkit-inner-spin-button { opacity:.4; }
+  @media print {
+    @page { size: A4 landscape; margin: 10mm; }
+    * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    body { background:#fff !important; }
+    .no-print, header, #toasts, #modal, #loginModal, #priceModal, #cloudModal { display:none !important; }
+    main { padding:0 !important; max-width:none !important; }
+    .tab { display:none !important; }
+    #tab-report { display:block !important; }
+    #reportArea { box-shadow:none !important; border:none !important; padding:0 !important; }
+    .print-page { break-after: page; }
+    .print-page:last-child { break-after: auto; }
+    .print-page + .print-page { margin-top:0; padding-top:0; border-top:none; }
+    .rpt tr { break-inside: avoid; }
+  }
+</style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen">
+
+<!-- ===================== HEADER ===================== -->
+<header class="no-print bg-gradient-to-r from-navy-900 via-navy-800 to-navy-600 text-white shadow-lg">
+  <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center gap-4">
+    <div class="w-14 h-14 rounded-2xl bg-white/10 border border-gold-400/60 grid place-items-center text-gold-400 text-2xl shrink-0">
+      <i class="fa-solid fa-landmark"></i>
+    </div>
+    <div class="flex-1 min-w-[240px]">
+      <p class="text-gold-200 text-xs tracking-wide">เทศบาลเมืองดอนแก้ว อำเภอแม่ริม จังหวัดเชียงใหม่</p>
+      <h1 class="text-lg sm:text-xl font-bold leading-snug">ระบบบันทึกและรวบรวมข้อมูลความต้องการด้านโครงสร้างพื้นฐานและครุภัณฑ์</h1>
+      <p class="text-sky-200 text-sm">เพื่อจัดทำแผนพัฒนาท้องถิ่น (พ.ศ. 2571–2575) • บันทึกออนไลน์พร้อมกันแบบไม่ทับข้อมูล</p>
+    </div>
+    <div class="flex flex-col items-end gap-1.5 text-xs">
+      <div class="flex flex-wrap items-center gap-2">
+        <button type="button" onclick="openCloudModal()" id="cloudBadgeBtn" class="inline-flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full px-3 py-1 transition">
+          <span id="cloudDot" class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+          <span id="cloudStatusTxt" class="font-semibold text-white">กำลังตรวจสอบการเชื่อมต่อ...</span>
+        </button>
+        <div class="inline-flex items-center gap-2 bg-white/15 border border-gold-400/40 rounded-full pl-3 pr-2 py-1">
+          <i class="fa-solid fa-user-check text-gold-400"></i>
+          <div class="text-left leading-tight">
+            <div id="curUserName" class="font-bold text-white text-xs">ยังไม่ได้ลงชื่อ</div>
+            <div id="curUserRole" class="text-[10px] text-gold-200">เจ้าหน้าที่ผู้บันทึก</div>
+          </div>
+          <button type="button" onclick="openLoginModal()" class="ml-1 bg-gold-400 text-navy-900 hover:bg-gold-500 rounded-full px-2.5 py-0.5 font-semibold text-[11px] transition">
+            สลับผู้ใช้
+          </button>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 text-gold-200">
+        <span id="todayTxt"></span>
+        <span>•</span>
+        <span class="inline-flex items-center gap-1.5">
+          <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+          <span id="saveStatus">ระบบแยกบันทึกทีละรหัสโครงการ (Concurrency-Safe)</span>
+        </span>
+      </div>
+    </div>
+  </div>
+  <nav class="bg-navy-900/50 border-t border-white/10">
+    <div class="max-w-7xl mx-auto px-2 flex flex-wrap items-center justify-between gap-1 overflow-x-auto">
+      <div class="flex gap-1">
+        <button class="tabbtn active" data-tab="dashboard"><i class="fa-solid fa-chart-pie"></i> Dashboard & งบรายปี</button>
+        <button class="tabbtn" data-tab="form"><i class="fa-solid fa-pen-to-square"></i> บันทึกโครงการ</button>
+        <button class="tabbtn" data-tab="table"><i class="fa-solid fa-table-list"></i> ตารางจัดการ/จัดลำดับ
+          <span id="cntBadge" class="ml-1 bg-gold-400 text-navy-900 text-xs font-bold rounded-full px-2 py-0.5">0</span>
+        </button>
+        <button class="tabbtn" data-tab="report"><i class="fa-solid fa-print"></i> รายงาน/พิมพ์</button>
+      </div>
+      <div class="flex items-center gap-2 py-1.5 pr-2">
+        <button type="button" onclick="openCloudModal()" class="text-xs bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-200 rounded-lg px-3 py-1.5 flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-cloud"></i> สถานะ Cloud ออนไลน์
+        </button>
+        <button type="button" onclick="openPriceModal()" class="text-xs bg-white/10 hover:bg-white/20 text-gold-200 rounded-lg px-3 py-1.5 flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-tags"></i> ตารางราคากลางอ้างอิง
+        </button>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 py-6">
+
+<!-- ===================== DASHBOARD ===================== -->
+<section id="tab-dashboard" class="tab">
+  <div class="flex flex-wrap items-end justify-between gap-3 mb-5 no-print">
+    <div>
+      <h2 class="text-2xl font-bold text-navy-800">ภาพรวมความต้องการและสรุปงบประมาณรายปี (พ.ศ. 2571–2575)</h2>
+      <p class="text-sm text-slate-500">ซิงค์ข้อมูลทุกหมู่บ้านแบบ Real-time โดยแยกบันทึกเป็นรายโครงการ ไม่ทับข้อมูลระหว่างเจ้าหน้าที่</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <select id="d_year" class="inp !w-auto"></select>
+      <select id="d_village" class="inp !w-auto"></select>
+      <button class="btn-gold" onclick="loadDemo()"><i class="fa-solid fa-wand-magic-sparkles"></i> เพิ่มข้อมูลตัวอย่าง</button>
+      <button class="btn-sky" onclick="exportCSV(true)"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+    </div>
+  </div>
+
+  <div id="dashEmpty" class="hidden card text-center py-14">
+    <div class="w-20 h-20 mx-auto rounded-full bg-sky2-100 text-sky2-600 grid place-items-center text-3xl mb-4"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+    <h3 class="text-xl font-bold text-navy-800">ยังไม่มีข้อมูลโครงการในระบบ</h3>
+    <p class="text-slate-500 mt-1 mb-5">เริ่มบันทึกโครงการใหม่ หรือกดปุ่มเพิ่มข้อมูลตัวอย่างทั้ง 10 หมู่บ้านเพื่อทดลองระบบ</p>
+    <div class="flex justify-center gap-2 flex-wrap">
+      <button class="btn-navy" onclick="showTab('form')"><i class="fa-solid fa-plus"></i> บันทึกโครงการใหม่</button>
+      <button class="btn-gold" onclick="loadDemo()"><i class="fa-solid fa-wand-magic-sparkles"></i> เพิ่มข้อมูลตัวอย่าง (Demo)</button>
+    </div>
+  </div>
+
+  <div id="dashBody">
+    <div id="kpiWrap" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4"></div>
+
+    <div class="card mt-5 overflow-x-auto">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <div>
+          <h3 class="font-bold text-navy-800 text-lg"><i class="fa-solid fa-calendar-check text-sky2-600"></i> ตารางสรุปงบประมาณรายปี (พ.ศ. 2571–2575) แยกตามหมู่บ้าน</h3>
+          <p class="text-xs text-slate-500">แสดงจำนวนโครงการและงบประมาณรวมในแต่ละปีงบประมาณของทั้ง 10 หมู่บ้าน</p>
+        </div>
+        <button class="btn-line !py-1.5 text-xs" onclick="showTab('report')"><i class="fa-solid fa-print"></i> พิมพ์ตารางสรุป</button>
+      </div>
+      <div id="matrixWrap" class="overflow-x-auto"></div>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-5 mt-5">
+      <div class="card lg:col-span-2">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <h3 class="font-bold text-navy-800 text-lg"><i class="fa-solid fa-map-location-dot text-sky2-600"></i> สัดส่วนงบประมาณแยกตามหมู่บ้าน</h3>
+          <div class="flex gap-3 text-xs text-slate-500">
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-navy-700"></span>โครงสร้างพื้นฐาน</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-gold-400"></span>ครุภัณฑ์</span>
+          </div>
+        </div>
+        <div id="villageChart" class="space-y-2"></div>
+      </div>
+      <div class="space-y-5">
+        <div class="card">
+          <h3 class="font-bold text-navy-800 mb-3"><i class="fa-solid fa-user-pen text-sky2-600"></i> สรุปตามเจ้าหน้าที่ผู้บันทึก</h3>
+          <div id="recorderChart" class="space-y-2.5"></div>
+        </div>
+        <div class="card">
+          <h3 class="font-bold text-navy-800 mb-3"><i class="fa-solid fa-gauge-high text-sky2-600"></i> แยกตามระดับความเร่งด่วน</h3>
+          <div id="urgChart" class="space-y-3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FORM ===================== -->
+<section id="tab-form" class="tab hidden">
+  <div id="editBanner" class="hidden mb-4 rounded-xl bg-gold-50 border border-gold-400 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+    <div>
+      <div class="text-navy-800 font-bold"><i class="fa-solid fa-pen text-gold-500"></i> กำลังแก้ไขรายการเดิม (อัปเดตเฉพาะรหัสโครงการนี้ ไม่กระทบรายการอื่น)</div>
+      <div id="editOwnerInfo" class="text-xs text-slate-600 mt-0.5"></div>
+    </div>
+    <button class="btn-line !py-1.5" onclick="resetForm()"><i class="fa-solid fa-xmark"></i> ยกเลิกการแก้ไข</button>
+  </div>
+
+  <div class="grid lg:grid-cols-3 gap-6">
+    <form id="mainForm" class="lg:col-span-2 space-y-5" onsubmit="return false" autocomplete="off">
+
+      <div class="rounded-xl bg-sky2-100/80 border border-sky2-500/30 px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 text-sm">
+        <div class="flex items-center gap-2 text-navy-800">
+          <i class="fa-solid fa-id-badge text-sky2-600 text-base"></i>
+          <span>ผู้บันทึกข้อมูล: <b id="formRecorderTxt">-</b></span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-xs text-emerald-700 font-medium"><i class="fa-solid fa-lock"></i> บันทึกแยก Document ID อิสระ</span>
+          <button type="button" onclick="openLoginModal()" class="text-xs font-semibold text-sky2-600 hover:underline">เปลี่ยนผู้บันทึก</button>
+        </div>
+      </div>
+
+      <!-- 1. ข้อมูลทั่วไป -->
+      <div class="card">
+        <div class="card-h"><span class="step">1</span> ข้อมูลพื้นที่ ปีงบประมาณ และลำดับความต้องการ</div>
+        <div class="grid sm:grid-cols-3 gap-4">
+          <div>
+            <label class="lbl">ปีงบประมาณ (พ.ศ.) <span class="text-red-500">*</span></label>
+            <select id="f_year" class="inp"></select>
+          </div>
+          <div>
+            <label class="lbl">หมู่บ้าน <span class="text-red-500">*</span></label>
+            <select id="f_village" class="inp"></select>
+          </div>
+          <div>
+            <label class="lbl">ลำดับความต้องการของหมู่บ้าน <span class="text-red-500">*</span></label>
+            <div class="flex gap-1.5">
+              <input id="f_priority" type="number" min="1" step="1" class="inp font-bold text-navy-800" placeholder="1">
+              <button type="button" class="btn-line !px-2.5 text-xs shrink-0" onclick="autoNextPriority()" title="คำนวณลำดับถัดไปของหมู่บ้านนี้">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> ต่อท้ายอัตโนมัติ
+              </button>
+            </div>
+            <p class="hint">ระบบเช็คลำดับล่าสุดของหมู่บ้านนี้เพื่อรันเลขต่อท้ายให้อัตโนมัติ</p>
+          </div>
+        </div>
+        <label class="lbl mt-4">ระดับความเร่งด่วน</label>
+        <div class="grid grid-cols-3 gap-2">
+          <label class="cursor-pointer"><input type="radio" name="f_urgency" value="high" class="peer sr-only">
+            <div class="chip justify-center peer-checked:border-red-500 peer-checked:bg-red-50 peer-checked:text-red-700"><i class="fa-solid fa-fire"></i> เร่งด่วนมาก</div></label>
+          <label class="cursor-pointer"><input type="radio" name="f_urgency" value="mid" class="peer sr-only">
+            <div class="chip justify-center peer-checked:border-amber-500 peer-checked:bg-amber-50 peer-checked:text-amber-700"><i class="fa-solid fa-clock"></i> ปานกลาง</div></label>
+          <label class="cursor-pointer"><input type="radio" name="f_urgency" value="normal" class="peer sr-only" checked>
+            <div class="chip justify-center peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-700"><i class="fa-solid fa-leaf"></i> ปกติ</div></label>
+        </div>
+      </div>
+
+      <!-- 2. หมวดหมู่หลัก -->
+      <div class="card">
+        <div class="card-h"><span class="step">2</span> เลือกหมวดหมู่หลัก</div>
+        <div class="grid sm:grid-cols-2 gap-3">
+          <label class="cursor-pointer"><input type="radio" name="f_cat" value="infra" class="peer sr-only" checked>
+            <div class="chip !items-start !py-3.5 peer-checked:border-navy-700 peer-checked:bg-navy-800 peer-checked:text-white">
+              <i class="fa-solid fa-helmet-safety text-2xl mt-0.5"></i>
+              <div><div class="font-bold">หมวดที่ 1 โครงสร้างพื้นฐานสาธารณะ</div><div class="text-xs opacity-80 font-normal">รองรับหลายงานในโครงการเดียว (เช่น ถนนพร้อมรางระบายน้ำ)</div></div>
+            </div></label>
+          <label class="cursor-pointer"><input type="radio" name="f_cat" value="equip" class="peer sr-only">
+            <div class="chip !items-start !py-3.5 peer-checked:border-gold-500 peer-checked:bg-gold-50 peer-checked:text-navy-800">
+              <i class="fa-solid fa-boxes-stacked text-2xl mt-0.5 text-gold-500"></i>
+              <div><div class="font-bold">หมวดที่ 2 ครุภัณฑ์ตามความต้องการของหมู่บ้าน</div><div class="text-xs opacity-80 font-normal">เสียงตามสาย ความปลอดภัย สุขภาพ ครุภัณฑ์ศาลาหมู่บ้าน</div></div>
+            </div></label>
+        </div>
+      </div>
+
+      <!-- 3. รายการงานย่อย ปริมาณงาน และงบประมาณ -->
+      <div class="card">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="card-h !mb-0"><span class="step">3</span> รายละเอียดงาน ปริมาณงาน และงบประมาณ</div>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="syncRefPrices()" class="btn-line !py-1.5 !px-3 text-xs">
+              <i class="fa-solid fa-cloud-arrow-down text-sky2-600"></i> ดึงราคากลางล่าสุด
+            </button>
+            <button type="button" onclick="addWorkComponent()" class="btn-sky !py-1.5 !px-3 text-xs">
+              <i class="fa-solid fa-plus"></i> เพิ่มงานพ่วงในโครงการเดียว
+            </button>
+          </div>
+        </div>
+        <div id="compList" class="space-y-4"></div>
+
+        <div class="mt-4 pt-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+          <button type="button" onclick="addWorkComponent()" class="btn-line text-xs">
+            <i class="fa-solid fa-layer-group text-sky2-600"></i> + เพิ่มงานก่อสร้าง/ครุภัณฑ์พ่วงในโครงการนี้
+          </button>
+          <div class="rounded-xl bg-navy-800 text-white px-5 py-3 min-w-[260px] text-right">
+            <div class="text-xs text-sky-200" id="calcFormula">รวมงบประมาณทั้งโครงการ</div>
+            <div class="text-2xl font-bold text-gold-400"><span id="calcTotal">0.00</span> <span class="text-sm text-white">บาท</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. ชื่อโครงการรวม -->
+      <div class="card">
+        <div class="card-h">
+          <span class="step">4</span> ชื่อโครงการ/รายการ
+          <span id="titleBadge" class="ml-auto text-xs font-medium rounded-full px-3 py-1"></span>
+        </div>
+        <textarea id="f_title" rows="2" class="inp" placeholder="ระบบจะสร้างชื่อโครงการให้อัตโนมัติจากรายการงานที่เลือก หรือพิมพ์แก้ไขเองได้"></textarea>
+        <div class="flex flex-wrap items-center justify-between gap-2 mt-2">
+          <p class="hint !mt-0">ระบบรวมชื่องานพ่วงและชื่อหมู่บ้านต่อท้ายให้อัตโนมัติ • แก้ไขข้อความได้ตามต้องการ</p>
+          <button type="button" id="btnRegenTitle" class="btn-line !py-1 text-xs" onclick="regenTitle()"><i class="fa-solid fa-rotate"></i> สร้างชื่ออัตโนมัติใหม่</button>
+        </div>
+      </div>
+
+      <!-- 5. สถานที่ดำเนินการ -->
+      <div class="card">
+        <div class="card-h"><span class="step">5</span> สถานที่/จุดดำเนินการ</div>
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div class="sm:col-span-2">
+            <label class="lbl">ชื่อสายทาง/ซอย/สถานที่ตั้ง</label>
+            <input id="f_locName" class="inp" placeholder="เช่น ซอย 3 สายบ้านนายสมชาย, บริเวณศาลาประจำหมู่บ้าน">
+          </div>
+          <div><label class="lbl">จุดเริ่มต้น</label><input id="f_start" class="inp" placeholder="เช่น บ้านเลขที่ 12"></div>
+          <div><label class="lbl">จุดสิ้นสุด</label><input id="f_end" class="inp" placeholder="เช่น ลำเหมืองสาธารณะ"></div>
+          <div class="sm:col-span-2">
+            <label class="lbl">พิกัด GPS (Lat, Long)</label>
+            <div class="flex gap-2">
+              <input id="f_gps" class="inp" placeholder="เช่น 18.856200, 98.963100">
+              <button type="button" class="btn-sky shrink-0" onclick="getGPS()"><i class="fa-solid fa-location-crosshairs"></i> ตำแหน่งปัจจุบัน</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. เหตุผลความจำเป็น & ผู้ได้รับประโยชน์ -->
+      <div class="card">
+        <div class="card-h">
+          <span class="step">6</span> เหตุผลความจำเป็นและผู้ได้รับประโยชน์
+          <span id="reasonBadge" class="ml-auto text-xs font-medium rounded-full px-3 py-1"></span>
+        </div>
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div class="sm:col-span-2">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+              <label class="lbl !mb-0">เหตุผลความจำเป็น / สภาพปัญหา</label>
+              <button type="button" class="text-xs text-sky2-600 hover:underline font-medium" onclick="regenReason()">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> สร้างเหตุผลอัตโนมัติตามประเภทงาน
+              </button>
+            </div>
+            <textarea id="f_reason" rows="3" class="inp" placeholder="ระบบจะเติมเหตุผลความจำเป็นตามประเภทงานก่อสร้าง/ครุภัณฑ์ให้อัตโนมัติ หรือพิมพ์แก้ไขได้"></textarea>
+          </div>
+          <div>
+            <label class="lbl">จำนวนครัวเรือนที่ได้รับประโยชน์ (ครัวเรือน)</label>
+            <input id="f_households" type="number" min="0" inputmode="numeric" class="inp" placeholder="0">
+          </div>
+          <div>
+            <label class="lbl">ผู้เสนอ/แหล่งที่มา</label>
+            <input id="f_proposer" class="inp" value="มติที่ประชุมประชาคมหมู่บ้าน" placeholder="เช่น มติที่ประชุมประชาคมหมู่บ้าน">
+          </div>
+        </div>
+      </div>
+
+      <div id="formErrors" class="hidden rounded-xl border-2 border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700"></div>
+
+      <div class="flex flex-wrap gap-3 justify-end sticky bottom-3 z-10">
+        <button type="button" class="btn-line shadow" onclick="resetForm(true)"><i class="fa-solid fa-eraser"></i> ล้างฟอร์ม</button>
+        <button type="button" id="btnSubmitForm" class="btn-navy shadow-lg !px-6 !py-3 text-base" onclick="saveForm()">
+          <i class="fa-solid fa-cloud-arrow-up"></i> <span id="btnSaveTxt">บันทึกโครงการ (ไม่ทับข้อมูลคนอื่น)</span>
+        </button>
+      </div>
+    </form>
+
+    <aside>
+      <div class="lg:sticky lg:top-4 space-y-4">
+        <div class="rounded-2xl bg-gradient-to-br from-navy-800 to-navy-600 text-white p-5 shadow-lg">
+          <p class="text-gold-200 text-xs mb-2"><i class="fa-solid fa-eye"></i> ตัวอย่างโครงการที่กำลังบันทึก</p>
+          <div id="pv"></div>
+        </div>
+        <div class="card text-sm text-slate-600">
+          <h4 class="font-bold text-navy-800 mb-2"><i class="fa-solid fa-shield-halved text-emerald-600"></i> กลไกป้องกันการทับข้อมูล</h4>
+          <ul class="list-disc pl-5 space-y-1 text-xs">
+            <li><b>แยก Document ID:</b> ระบบสร้าง ID เฉพาะรายการ ไม่มีการส่งตารางทั้งชุดไปเขียนทับข้อมูลของผู้อื่น</li>
+            <li><b>รันลำดับต่อท้าย:</b> หากมีผู้ใช้ลำดับเดียวกันในหมู่บ้านไปก่อนแล้ว ระบบจะจัดลำดับถัดไปให้โดยอัตโนมัติ</li>
+            <li><b>ซิงค์ทันที:</b> เมื่อเจ้าหน้าที่ท่านอื่นบันทึกจากอีกเครื่อง ข้อมูลจะอัปเดตลงตารางและรายงานแบบ Real-time</li>
+          </ul>
+        </div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ===================== TABLE ===================== -->
+<section id="tab-table" class="tab hidden">
+  <div class="flex flex-wrap items-end justify-between gap-3 mb-4">
+    <div>
+      <h2 class="text-2xl font-bold text-navy-800">ตารางจัดการข้อมูลและจัดลำดับความต้องการ</h2>
+      <p class="text-sm text-slate-500">ปรับลำดับความต้องการรายหมู่บ้าน ค้นหา แก้ไข และผสานข้อมูลจากหลายเครื่องโดยไม่ทับกัน</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <button class="btn-navy" onclick="resetForm();showTab('form')"><i class="fa-solid fa-plus"></i> เพิ่มโครงการ</button>
+      <button class="btn-sky" onclick="exportCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV (Excel)</button>
+      <button class="btn-line" onclick="backupJSON()"><i class="fa-solid fa-download"></i> สำรองข้อมูล (.json)</button>
+      <label class="btn-line cursor-pointer" title="นำเข้าข้อมูลจากเครื่องอื่นมารวมกันโดยไม่ลบของเดิม"><i class="fa-solid fa-code-merge text-emerald-600"></i> รวมไฟล์จากเครื่องอื่น
+        <input type="file" accept=".json,application/json" class="hidden" onchange="importJSON(this.files[0]);this.value=''">
+      </label>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-6 gap-3">
+      <div class="lg:col-span-2 relative">
+        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+        <input id="t_search" class="inp pl-9" placeholder="ค้นหาชื่อโครงการ สถานที่ ผู้บันทึก...">
+      </div>
+      <select id="t_village" class="inp"></select>
+      <select id="t_year" class="inp"></select>
+      <select id="t_cat" class="inp">
+        <option value="">ทุกหมวดหมู่</option>
+        <option value="infra">โครงสร้างพื้นฐาน</option>
+        <option value="equip">ครุภัณฑ์</option>
+      </select>
+      <select id="t_recorder" class="inp">
+        <option value="">ผู้บันทึกทั้งหมด</option>
+      </select>
+    </div>
+    <div id="tSummary" class="mt-3 text-sm text-slate-600"></div>
+  </div>
+
+  <div class="card !p-0 overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-navy-800 text-white">
+        <tr>
+          <th class="px-3 py-3 text-center w-24">ลำดับความต้องการ</th>
+          <th class="px-3 py-3 text-left">ปีงบฯ</th>
+          <th class="px-3 py-3 text-left">หมู่บ้าน</th>
+          <th class="px-3 py-3 text-left">ชื่อโครงการ / รายละเอียดปริมาณงาน</th>
+          <th class="px-3 py-3 text-right">งบประมาณ (บาท)</th>
+          <th class="px-3 py-3 text-center">ความเร่งด่วน</th>
+          <th class="px-3 py-3 text-left">ผู้บันทึก / แก้ไข</th>
+          <th class="px-3 py-3 text-center">จัดการ</th>
+        </tr>
+      </thead>
+      <tbody id="tBody"></tbody>
+      <tfoot id="tFoot"></tfoot>
+    </table>
+  </div>
+</section>
+
+<!-- ===================== REPORT ===================== -->
+<section id="tab-report" class="tab hidden">
+  <div class="no-print card mb-4">
+    <div class="flex flex-wrap items-end gap-3">
+      <div><label class="lbl">หมู่บ้าน</label><select id="r_village" class="inp"></select></div>
+      <div><label class="lbl">ปีงบประมาณ</label><select id="r_year" class="inp"></select></div>
+      <div>
+        <label class="lbl">หมวดหมู่</label>
+        <select id="r_cat" class="inp">
+          <option value="">ทุกหมวดหมู่</option>
+          <option value="infra">โครงสร้างพื้นฐาน</option>
+          <option value="equip">ครุภัณฑ์</option>
+        </select>
+      </div>
+      <button class="btn-navy ml-auto" onclick="window.print()"><i class="fa-solid fa-print"></i> สั่งพิมพ์รายงาน (A4 แนวนอน)</button>
+    </div>
+  </div>
+  <div id="reportArea" class="bg-white shadow rounded-2xl p-6 border border-slate-200"></div>
+</section>
+
+</main>
+
+<!-- ===================== CLOUD FIREBASE SETUP MODAL ===================== -->
+<div id="cloudModal" class="fixed inset-0 z-50 bg-navy-900/70 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 max-h-[92vh] overflow-y-auto">
+    <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-emerald-600 text-white grid place-items-center text-lg">
+          <i class="fa-solid fa-cloud-bolt"></i>
+        </div>
+        <div>
+          <h3 class="font-bold text-lg text-navy-800">ตั้งค่าระบบฐานข้อมูลออนไลน์ (Firebase Cloud Sync)</h3>
+          <p class="text-xs text-slate-500">ระบบเชื่อมต่ออัตโนมัติจากค่า Config ที่ฝังไว้ หรือปรับเปลี่ยนค่าเองได้</p>
+        </div>
+      </div>
+      <button type="button" onclick="closeCloudModal()" class="text-slate-400 hover:text-slate-700 text-lg px-2"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div class="space-y-4 text-sm">
+      <div class="rounded-xl bg-emerald-50 border border-emerald-200 p-3.5 text-xs text-emerald-900 space-y-1">
+        <div class="font-bold"><i class="fa-solid fa-shield-check"></i> บันทึกแยก Document อิสระ (Non-Overwriting):</div>
+        <p>เจ้าหน้าที่สามารถกรอกข้อมูลจากหลายอุปกรณ์พร้อมกันได้โดยข้อมูลจะไม่ถูกบันทึกทับกัน ข้อมูลจะถูกจัดเก็บเข้าสู่ Firestore Collection แยกเป็นรายโครงการ</p>
+      </div>
+
+      <div>
+        <label class="lbl">Firebase Config</label>
+        <textarea id="fb_config_inp" rows="6" class="inp font-mono text-xs" placeholder='{
+  "apiKey": "AIzaSy...",
+  "authDomain": "your-project.firebaseapp.com",
+  "projectId": "your-project-id",
+  "storageBucket": "your-project.appspot.com",
+  "messagingSenderId": "...",
+  "appId": "..."
+}'></textarea>
+        <p class="hint">สามารถระบุค่า Config ได้โดยตรงในโค้ดส่วน `EMBEDDED_FIREBASE_CONFIG` เพื่อให้ระบบเชื่อมต่อให้อัตโนมัติ</p>
+      </div>
+
+      <div>
+        <label class="lbl">ชื่อห้องข้อมูล / Collection Prefix</label>
+        <input id="fb_room_inp" class="inp text-sm font-semibold" value="donkaew_plan_2571" placeholder="donkaew_plan_2571">
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-200">
+        <button type="button" onclick="disconnectCloud()" class="btn-red text-xs">
+          <i class="fa-solid fa-plug-circle-xmark"></i> สลับเป็นโหมดในเครื่อง (Offline)
+        </button>
+        <div class="flex gap-2">
+          <button type="button" onclick="syncLocalToCloud()" id="btnPushLocal" class="btn-line text-xs hidden">
+            <i class="fa-solid fa-cloud-arrow-up text-sky2-600"></i> ส่งข้อมูลในเครื่องขึ้น Cloud
+          </button>
+          <button type="button" onclick="saveCloudConfig()" class="btn-navy">
+            <i class="fa-solid fa-link"></i> เชื่อมต่อฐานข้อมูล
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== LOGIN & REGISTRATION MODAL ===================== -->
+<div id="loginModal" class="fixed inset-0 z-50 bg-navy-900/70 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-navy-800 text-gold-400 grid place-items-center text-lg">
+          <i class="fa-solid fa-user-shield"></i>
+        </div>
+        <div>
+          <h3 class="font-bold text-lg text-navy-800">ลงชื่อเข้าใช้งานระบบ (สำหรับเจ้าหน้าที่)</h3>
+          <p class="text-xs text-slate-500">เลือกชื่อที่ลงทะเบียนไว้เพื่อเข้าใช้งานใน 1 คลิก หรือลงทะเบียนผู้กรอกใหม่</p>
+        </div>
+      </div>
+      <button type="button" onclick="closeLoginModal()" class="text-slate-400 hover:text-slate-700 text-lg px-2"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div class="mb-5">
+      <label class="lbl text-xs uppercase tracking-wider text-slate-500">รายชื่อเจ้าหน้าที่ที่ลงทะเบียนไว้ (คลิกเพื่อเข้าใช้งาน)</label>
+      <div id="savedUsersList" class="grid sm:grid-cols-2 gap-2 mt-2"></div>
+    </div>
+
+    <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+      <h4 class="font-bold text-sm text-navy-800 mb-3"><i class="fa-solid fa-user-plus text-sky2-600"></i> ลงทะเบียนชื่อผู้กรอกใหม่</h4>
+      <div class="space-y-3">
+        <div>
+          <label class="lbl">ชื่อ - นามสกุล <span class="text-red-500">*</span></label>
+          <input id="u_name" class="inp" placeholder="เช่น นายสมชาย ใจดี">
+        </div>
+        <div>
+          <label class="lbl">ตำแหน่งผู้กรอก <span class="text-red-500">*</span></label>
+          <input id="u_role" class="inp" list="dl_roles" placeholder="แตะเลือกตำแหน่งด้านล่าง หรือพิมพ์ระบุเอง">
+          <datalist id="dl_roles">
+            <option value="นักวิเคราะห์นโยบายและแผน">
+            <option value="นายช่างโยธา">
+            <option value="วิศวกรโยธา">
+            <option value="นักพัฒนาชุมชน">
+            <option value="นักจัดการงานทั่วไป">
+            <option value="เจ้าพนักงานธุรการ">
+            <option value="เจ้าพนักงานป้องกันและบรรเทาสาธารณภัย">
+          </datalist>
+          <div class="flex flex-wrap gap-1.5 mt-2">
+            <button type="button" class="ichip" onclick="document.getElementById('u_role').value='นักวิเคราะห์นโยบายและแผน'">นักวิเคราะห์นโยบายและแผน</button>
+            <button type="button" class="ichip" onclick="document.getElementById('u_role').value='นายช่างโยธา'">นายช่างโยธา</button>
+            <button type="button" class="ichip" onclick="document.getElementById('u_role').value='นักพัฒนาชุมชน'">นักพัฒนาชุมชน</button>
+            <button type="button" class="ichip" onclick="document.getElementById('u_role').value='นักจัดการงานทั่วไป'">นักจัดการงานทั่วไป</button>
+            <button type="button" class="ichip" onclick="document.getElementById('u_role').value='เจ้าพนักงานธุรการ'">เจ้าพนักงานธุรการ</button>
+          </div>
+        </div>
+        <button type="button" onclick="registerAndLogin()" class="btn-navy w-full mt-2">
+          <i class="fa-solid fa-right-to-bracket"></i> บันทึกการลงทะเบียนและเข้าใช้งาน
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== REFERENCE PRICE MODAL ===================== -->
+<div id="priceModal" class="fixed inset-0 z-50 bg-navy-900/70 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 max-h-[88vh] flex flex-col">
+    <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-3">
+      <div>
+        <h3 class="font-bold text-lg text-navy-800"><i class="fa-solid fa-tags text-sky2-600"></i> บัญชีราคากลางอ้างอิง (อัปเดตอัตโนมัติ)</h3>
+        <p class="text-xs text-slate-500">ปรับปรุงราคาต่อหน่วยให้ตรงกับราคากลางท้องถิ่น/พาณิชย์จังหวัดเชียงใหม่</p>
+      </div>
+      <button type="button" onclick="closePriceModal()" class="text-slate-400 hover:text-slate-700 text-lg px-2"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div id="priceBookBody" class="overflow-y-auto flex-1 space-y-2 pr-1"></div>
+    <div class="flex flex-wrap justify-between items-center gap-2 border-t border-slate-200 pt-3 mt-3">
+      <button type="button" onclick="resetRefPrices()" class="btn-line text-xs"><i class="fa-solid fa-rotate-left"></i> คืนค่ามาตรฐาน</button>
+      <div class="flex gap-2">
+        <button type="button" onclick="closePriceModal()" class="btn-line">ปิด</button>
+        <button type="button" onclick="savePriceBookModal()" class="btn-navy"><i class="fa-solid fa-check"></i> บันทึกราคากลาง</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast & Confirm Modal -->
+<div id="toasts" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+<div id="modal" class="fixed inset-0 z-50 bg-navy-900/60 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+    <div class="flex gap-3">
+      <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-600 grid place-items-center text-xl shrink-0"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div><h3 id="mTitle" class="font-bold text-lg text-navy-800"></h3><p id="mMsg" class="text-sm text-slate-600 mt-1 break-words"></p></div>
+    </div>
+    <div class="flex justify-end gap-2 mt-6">
+      <button id="mCancel" class="btn-line">ยกเลิก</button>
+      <button id="mOk" class="btn-navy">ยืนยัน</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp, getApps, deleteApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+window.__FB = { initializeApp, getApps, deleteApp, getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot };
+if (window.__initCloudOnReady) window.__initCloudOnReady();
+</script>
+
+<script>
+/* ================================================================
+   1) MASTER DATA & CONFIG
+================================================================ */
+const STORE_KEY  = 'donkaew_localplan_v4';
+const USER_KEY   = 'donkaew_current_user_v4';
+const USERS_LIST = 'donkaew_registered_users_v4';
+const PRICE_KEY  = 'donkaew_ref_prices_v4';
+const CLOUD_KEY  = 'donkaew_firebase_cfg_v4';
+
+/* ================================================================
+   จุดฝังค่า FIREBASE CONFIG (นำค่าจริงมาวางแทนที่เพื่อให้ออนไลน์ทันที)
+================================================================ */
+const EMBEDDED_FIREBASE_CONFIG = {
+  apiKey: "AIzaSyA8v35acDAzuRSVuU4GwrDNckoXeDtDfIo",
+  authDomain: "dkbuilding-db1ed.firebaseapp.com",
+  projectId: "dkbuilding-db1ed",
+  storageBucket: "dkbuilding-db1ed.firebasestorage.app",
+  messagingSenderId: "982376295015",
+  appId: "1:982376295015:web:1898294a9b11317cf282c2"
+};
+const EMBEDDED_ROOM_NAME = "donkaew_plan_2571";
+
+const ORG   = 'เทศบาลเมืองดอนแก้ว อำเภอแม่ริม จังหวัดเชียงใหม่';
+const YEARS = [2571, 2572, 2573, 2574, 2575];
+const VILLAGES = [
+  { no: 1,  name: 'บ้านบ่อปุ๊' },
+  { no: 2,  name: 'บ้านดอนแก้ว' },
+  { no: 3,  name: 'บ้านศาลา' },
+  { no: 4,  name: 'บ้านป่าแงะ' },
+  { no: 5,  name: 'บ้านพระนอน' },
+  { no: 6,  name: 'บ้านป่ารวก' },
+  { no: 7,  name: 'บ้านสันเหมือง' },
+  { no: 8,  name: 'บ้านชะเยือง' },
+  { no: 9,  name: 'สบสา-หนองฟาน' },
+  { no: 10, name: 'บ้านพระเจ้านั่งโก๋น' }
+];
+const vLabel = no => no ? `หมู่ที่ ${no} ${VILLAGES[no - 1]?.name || ''}` : '';
+
+const URG = {
+  high:   { label: 'เร่งด่วนมาก', rank: 1, badge: 'bg-red-100 text-red-700 border-red-200',       bar: 'bg-red-500' },
+  mid:    { label: 'ปานกลาง',   rank: 2, badge: 'bg-amber-100 text-amber-700 border-amber-200', bar: 'bg-amber-500' },
+  normal: { label: 'ปกติ',       rank: 3, badge: 'bg-emerald-100 text-emerald-700 border-emerald-200', bar: 'bg-emerald-500' }
+};
+
+const $  = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const num = v => { const n = parseFloat(String(v ?? '').replace(/,/g, '')); return isFinite(n) ? n : 0; };
+const fmtMoney = n => Number(n || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtNum   = n => Number(n || 0).toLocaleString('th-TH', { maximumFractionDigits: 2 });
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => 'dk_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 9);
+const sumBudget = arr => arr.reduce((s, r) => s + num(r.budget), 0);
+const pct = (a, b) => b ? (a / b * 100) : 0;
+
+/* ================================================================
+   2) STANDARD REFERENCE PRICES & AUTO-REASONS
+================================================================ */
+const DEFAULT_REF_PRICES = {
+  'ก่อสร้างถนนคอนกรีตเสริมเหล็ก (คสล.)': { price: 780, unit: 'ตร.ม.', reason: 'สภาพผิวจราจรเดิมชำรุดเป็นหลุมบ่อ สัญจรไปมาไม่สะดวกและเสี่ยงต่อการเกิดอุบัติเหตุ' },
+  'ก่อสร้างถนนลาดยางแอสฟัลต์ติกคอนกรีต': { price: 360, unit: 'ตร.ม.', reason: 'ผิวจราจรเดิมเสื่อมสภาพตามอายุการใช้งาน ประชาชนสัญจรและขนส่งผลผลิตไม่สะดวก' },
+  'ปรับปรุงผิวจราจรแอสฟัลต์ติกคอนกรีต (Overlay)': { price: 320, unit: 'ตร.ม.', reason: 'ผิวจราจรเดิมแตกร้าวขรุขระ จำเป็นต้องปูทับผิวจราจรเพื่อความปลอดภัยในการสัญจร' },
+  'ก่อสร้างถนนหินคลุก': { price: 110, unit: 'ตร.ม.', reason: 'เป็นทางดินลูกรัง ฤดูฝนมีน้ำท่วมขังและเป็นโคลนตม ประชาชนเดินทางและขนส่งผลผลิตลำบาก' },
+  'ซ่อมแซมถนนคอนกรีตเสริมเหล็ก (คสล.)': { price: 650, unit: 'ตร.ม.', reason: 'ผิวถนนคอนกรีตเดิมแตกร้าวทรุดตัว อาจก่อให้เกิดอันตรายแก่ผู้ใช้รถใช้ถนน' },
+  'ก่อสร้างรางระบายน้ำ คสล. รูปตัวยู': { price: 2400, unit: 'เมตร', reason: 'ไม่มีระบบระบายน้ำที่ได้มาตรฐาน ทำให้เกิดปัญหาน้ำท่วมขังผิวจราจรและบ้านเรือนในฤดูฝน' },
+  'ก่อสร้างรางระบายน้ำ คสล. รูปตัวยู พร้อมฝาปิด': { price: 2950, unit: 'เมตร', reason: 'ระบายน้ำไม่ทันในฤดูฝน น้ำเอ่อล้นท่วมขังผิวจราจรและพื้นที่อยู่อาศัยของประชาชน' },
+  'วางท่อระบายน้ำ คสล. พร้อมบ่อพัก': { price: 2200, unit: 'เมตร', reason: 'ทางระบายน้ำเดิมอุดตันและมีขนาดเล็ก ไม่สามารถระบายน้ำในช่วงฝนตกหนักได้ทัน' },
+  'ก่อสร้างท่อลอดเหลี่ยม คสล.': { price: 420000, unit: 'แห่ง', reason: 'ท่อระบายน้ำเดิมที่จุดตัดถนนมีขนาดเล็ก น้ำล้นตลิ่งและกัดเซาะถนนเสียหาย' },
+  'ขุดลอกรางระบายน้ำ/ลำเหมือง': { price: 120, unit: 'เมตร', reason: 'ลำเหมืองตื้นเขินและมีวัชพืชปกคลุม ทำให้น้ำไหลไม่สะดวกและเกิดน้ำท่วมขัง' },
+  'ติดตั้งโคมไฟถนน LED': { price: 6800, unit: 'จุด', reason: 'เส้นทางสัญจรในเวลากลางคืนมืด ไม่มีไฟส่องสว่าง เสี่ยงต่อการเกิดอุบัติเหตุและอาชญากรรม' },
+  'ติดตั้งไฟส่องสว่างพลังงานแสงอาทิตย์ (โซลาร์เซลล์)': { price: 26500, unit: 'จุด', reason: 'พื้นที่ห่างไกลสายส่งไฟฟ้า เส้นทางมืดในเวลากลางคืน ไม่ปลอดภัยต่อชีวิตและทรัพย์สิน' },
+  'ขยายเขตไฟฟ้าสาธารณะพร้อมติดตั้งโคมไฟ': { price: 950, unit: 'เมตร', reason: 'ประชาชนปลูกสร้างที่อยู่อาศัยขยายตัว ยังไม่มีระบบไฟฟ้าแสงสว่างสาธารณะเข้าถึง' },
+  'ขยายเขตท่อเมนประปา': { price: 390, unit: 'เมตร', reason: 'ประชาชนที่อยู่อาศัยปลายสายประสบปัญหาน้ำประปาไหลอ่อนและไม่เพียงพอต่อการอุปโภค' },
+  'ขุดเจาะบ่อบาดาล': { price: 450000, unit: 'แห่ง', reason: 'แหล่งน้ำดิบไม่เพียงพอในฤดูแล้ง ประชาชนขาดแคลนน้ำเพื่อการอุปโภคบริโภค' },
+  'ก่อสร้างศาลาอเนกประสงค์': { price: 650000, unit: 'หลัง', reason: 'หมู่บ้านยังไม่มีสถานที่เพียงพอสำหรับการจัดประชุมประชาคมและกิจกรรมสาธารณประโยชน์' },
+  'ก่อสร้างลานกีฬาอเนกประสงค์': { price: 620, unit: 'ตร.ม.', reason: 'ขาดแคลนพื้นที่ออกกำลังกายและจัดกิจกรรมนันทนาการสำหรับเยาวชนและประชาชนในหมู่บ้าน' },
+  'ชุดเครื่องเสียงตามสายพร้อมติดตั้ง': { price: 45000, unit: 'ชุด', reason: 'ระบบเสียงตามสายเดิมชำรุดเสียหาย ไม่สามารถประชาสัมพันธ์ข่าวสารทางราชการได้ทั่วถึง' },
+  'ระบบเสียงตามสายไร้สาย': { price: 180000, unit: 'ระบบ', reason: 'สายสัญญาณเดิมชำรุดบ่อยครั้ง จำเป็นต้องใช้ระบบไร้สายเพื่อแจ้งข่าวสารครอบคลุมทั้งหมู่บ้าน' },
+  'กล้องวงจรปิด (CCTV)': { price: 18500, unit: 'ตัว', reason: 'เพื่อเฝ้าระวังเหตุร้าย ป้องกันอาชญากรรม และรักษาความปลอดภัยในชีวิตและทรัพย์สินของประชาชน' },
+  'ถังดับเพลิงเคมีแห้ง ขนาด 15 ปอนด์': { price: 1500, unit: 'ถัง', reason: 'เพื่อเตรียมความพร้อมในการป้องกันและระงับอัคคีภัยเบื้องต้นภายในชุมชนอย่างทันท่วงที' },
+  'เครื่องออกกำลังกายกลางแจ้ง': { price: 180000, unit: 'ชุด', reason: 'เพื่อส่งเสริมสุขภาพพลานามัยของผู้สูงอายุและประชาชนในหมู่บ้านให้มีสุขภาพแข็งแรง' },
+  'เครื่องเล่นสนามเด็กเล่น': { price: 150000, unit: 'ชุด', reason: 'เพื่อส่งเสริมพัฒนาการทางร่างกายและสติปัญญาของเด็กและเยาวชนในชุมชน' },
+  'เต็นท์ผ้าใบทรงจั่ว': { price: 12500, unit: 'หลัง', reason: 'สำหรับใช้ในกิจกรรมสาธารณประโยชน์ งานประเพณี และงานบริการชุมชนของหมู่บ้าน' },
+  'โต๊ะพับอเนกประสงค์': { price: 1800, unit: 'ตัว', reason: 'อุปกรณ์เดิมมีไม่เพียงพอต่อการจัดประชุมประชาคมและกิจกรรมของหมู่บ้าน' },
+  'เก้าอี้พลาสติก': { price: 260, unit: 'ตัว', reason: 'สำหรับรองรับประชาชนในการประชุมหมู่บ้านและงานกิจกรรมสาธารณประโยชน์' },
+  'พัดลมอุตสาหกรรม': { price: 3500, unit: 'เครื่อง', reason: 'เพื่ออำนวยความสะดวกในการจัดประชุมและกิจกรรมภายในศาลาอเนกประสงค์ของหมู่บ้าน' }
+};
+
+let refPrices = {};
+function loadRefPrices() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PRICE_KEY) || 'null');
+    refPrices = saved ? { ...DEFAULT_REF_PRICES, ...saved } : { ...DEFAULT_REF_PRICES };
+  } catch (e) { refPrices = { ...DEFAULT_REF_PRICES }; }
+}
+const getRefPrice = itemName => refPrices[itemName]?.price || 0;
+const getRefReason = itemName => refPrices[itemName]?.reason || '';
+
+/* ================================================================
+   3) CATEGORY & SUB-CATEGORY CONFIG
+================================================================ */
+const SUB_DEFS = {
+  road: {
+    cat: 'infra', label: 'ถนน/ทางสัญจร', dept: 'กองช่าง',
+    items: ['ก่อสร้างถนนคอนกรีตเสริมเหล็ก (คสล.)', 'ก่อสร้างถนนลาดยางแอสฟัลต์ติกคอนกรีต', 'ปรับปรุงผิวจราจรแอสฟัลต์ติกคอนกรีต (Overlay)', 'ก่อสร้างถนนหินคลุก', 'ซ่อมแซมถนนคอนกรีตเสริมเหล็ก (คสล.)'],
+    dims: [
+      { k: 'width',  label: 'กว้าง (ม.)',  placeholder: '4' },
+      { k: 'length', label: 'ยาว (ม.)',    placeholder: '150' },
+      { k: 'thick',  label: 'หนา (ม.)',    placeholder: '0.15' },
+      { k: 'area',   label: 'พื้นที่รวม (ตร.ม.)', placeholder: 'คำนวณอัตโนมัติ' }
+    ],
+    calc: d => {
+      const w = num(d.width), l = num(d.length), t = num(d.thick), a = num(d.area) || (w * l);
+      const p = [];
+      if (w) p.push(`กว้าง ${fmtNum(w)} ม.`);
+      if (l) p.push(`ยาว ${fmtNum(l)} ม.`);
+      if (t) p.push(`หนา ${fmtNum(t)} ม.`);
+      if (a) p.push(`พื้นที่ไม่น้อยกว่า ${fmtNum(a)} ตร.ม.`);
+      return { q: a, u: 'ตร.ม.', desc: p.join(' ') };
+    }
+  },
+  drain: {
+    cat: 'infra', label: 'ระบบระบายน้ำ', dept: 'กองช่าง',
+    items: ['ก่อสร้างรางระบายน้ำ คสล. รูปตัวยู', 'ก่อสร้างรางระบายน้ำ คสล. รูปตัวยู พร้อมฝาปิด', 'วางท่อระบายน้ำ คสล. พร้อมบ่อพัก', 'ก่อสร้างท่อลอดเหลี่ยม คสล.', 'ขุดลอกรางระบายน้ำ/ลำเหมือง'],
+    dims: [
+      { k: 'width',   label: 'ขนาดกว้าง/ศก. (ม.)', placeholder: '0.40' },
+      { k: 'length',  label: 'ความยาวรวม (ม.)',   placeholder: '200' },
+      { k: 'manhole', label: 'จำนวนบ่อพัก (จุด)',   placeholder: '0' }
+    ],
+    calc: d => {
+      const w = num(d.width), l = num(d.length), m = num(d.manhole), p = [];
+      if (w) p.push(`ขนาด ${fmtNum(w)} ม.`);
+      if (l) p.push(`ยาวรวม ${fmtNum(l)} ม.`);
+      if (m) p.push(`พร้อมบ่อพัก ${fmtNum(m)} จุด`);
+      return { q: l || 1, u: l ? 'เมตร' : 'แห่ง', desc: p.join(' ') };
+    }
+  },
+  light: {
+    cat: 'infra', label: 'ไฟฟ้าสาธารณะ/แสงสว่าง', dept: 'กองช่าง',
+    items: ['ติดตั้งโคมไฟถนน LED', 'ติดตั้งไฟส่องสว่างพลังงานแสงอาทิตย์ (โซลาร์เซลล์)', 'ขยายเขตไฟฟ้าสาธารณะพร้อมติดตั้งโคมไฟ'],
+    dims: [
+      { k: 'count', label: 'จำนวน (จุด/ต้น)', placeholder: '15' },
+      { k: 'dist',  label: 'ระยะทางรวม (ม.)', placeholder: '500' }
+    ],
+    calc: d => {
+      const c = num(d.count), s = num(d.dist), p = [];
+      if (c) p.push(`จำนวน ${fmtNum(c)} จุด`);
+      if (s) p.push(`ระยะทาง ${fmtNum(s)} ม.`);
+      return c ? { q: c, u: 'จุด', desc: p.join(' ') } : { q: s, u: 'เมตร', desc: p.join(' ') };
+    }
+  },
+  water: {
+    cat: 'infra', label: 'ระบบประปา/แหล่งน้ำ', dept: 'กองช่าง',
+    items: ['ขยายเขตท่อเมนประปา', 'ขุดเจาะบ่อบาดาล'],
+    dims: [
+      { k: 'size',   label: 'ขนาดท่อ(นิ้ว)/ลึก(ม.)', placeholder: '2' },
+      { k: 'amount', label: 'ความยาว(ม.)/จำนวน(แห่ง)', placeholder: '300' }
+    ],
+    calc: d => {
+      const s = num(d.size), a = num(d.amount), p = [];
+      if (s) p.push(`ขนาด ${fmtNum(s)} นิ้ว/ม.`);
+      if (a) p.push(`ปริมาณงาน ${fmtNum(a)} ม./แห่ง`);
+      return { q: a || 1, u: a > 10 ? 'เมตร' : 'แห่ง', desc: p.join(' ') };
+    }
+  },
+  building: {
+    cat: 'infra', label: 'อาคาร/สิ่งก่อสร้างสาธารณะ', dept: 'กองช่าง',
+    items: ['ก่อสร้างศาลาอเนกประสงค์', 'ก่อสร้างลานกีฬาอเนกประสงค์'],
+    dims: [
+      { k: 'width',  label: 'กว้าง (ม.)', placeholder: '8' },
+      { k: 'length', label: 'ยาว (ม.)',   placeholder: '12' },
+      { k: 'count',  label: 'จำนวน (หลัง/แห่ง)', placeholder: '1' }
+    ],
+    calc: d => {
+      const w = num(d.width), l = num(d.length), c = num(d.count), a = w * l, p = [];
+      if (w && l) p.push(`ขนาด ${fmtNum(w)}×${fmtNum(l)} ม. (${fmtNum(a)} ตร.ม.)`);
+      if (c) p.push(`จำนวน ${fmtNum(c)} หลัง/แห่ง`);
+      return c ? { q: c, u: 'หลัง', desc: p.join(' ') } : { q: a, u: 'ตร.ม.', desc: p.join(' ') };
+    }
+  },
+  custom_infra: {
+    cat: 'infra', label: 'งานก่อสร้างอื่นๆ (ระบุเอง)', dept: 'กองช่าง',
+    items: [],
+    dims: [
+      { k: 'desc', label: 'รายละเอียดขนาด/ปริมาณงาน', type: 'text', placeholder: 'เช่น กว้าง 2 ม. ยาว 50 ม.' },
+      { k: 'qty',  label: 'ปริมาณงานรวม', placeholder: '1' },
+      { k: 'unit', label: 'หน่วยนับ', type: 'text', placeholder: 'แห่ง / เมตร / ตร.ม.' }
+    ],
+    calc: d => {
+      const q = num(d.qty) || 1, u = d.unit || 'แห่ง';
+      return { q, u, desc: d.desc ? `${d.desc} (${fmtNum(q)} ${u})` : `จำนวน ${fmtNum(q)} ${u}` };
+    }
+  },
+  equip_item: {
+    cat: 'equip', label: 'รายการครุภัณฑ์ชุมชน', dept: 'สำนักปลัด / กองสาธารณสุขฯ',
+    items: [
+      'ชุดเครื่องเสียงตามสายพร้อมติดตั้ง', 'ระบบเสียงตามสายไร้สาย',
+      'กล้องวงจรปิด (CCTV)', 'ถังดับเพลิงเคมีแห้ง ขนาด 15 ปอนด์',
+      'เครื่องออกกำลังกายกลางแจ้ง', 'เครื่องเล่นสนามเด็กเล่น',
+      'เต็นท์ผ้าใบทรงจั่ว', 'โต๊ะพับอเนกประสงค์', 'เก้าอี้พลาสติก', 'พัดลมอุตสาหกรรม'
+    ],
+    dims: [
+      { k: 'spec', label: 'คุณลักษณะเฉพาะ/สเปกเบื้องต้น', type: 'text', placeholder: 'ระบุขนาด กำลังไฟ หรือรายละเอียดครุภัณฑ์' },
+      { k: 'qty',  label: 'จำนวนที่ต้องการ', placeholder: '1' },
+      { k: 'unit', label: 'หน่วยนับ', type: 'text', placeholder: 'ชุด / เครื่อง / ตัว / หลัง' }
+    ],
+    calc: d => {
+      const q = num(d.qty) || 0, u = d.unit || 'ชุด';
+      return { q, u, desc: q ? `จำนวน ${fmtNum(q)} ${u}${d.spec ? ` (${d.spec})` : ''}` : '' };
+    }
+  }
+};
+
+/* ================================================================
+   4) STATE & CLOUD SYNC LOGIC
+================================================================ */
+let records = [];
+let registeredUsers = [];
+let currentUser = { name: 'เจ้าหน้าที่วิเคราะห์นโยบายและแผน', role: 'นักวิเคราะห์นโยบายและแผน' };
+let workComponents = [];
+let editingId = null;
+let titleAuto = true;
+let reasonAuto = true;
+
+let fbDb = null;
+let fbUnsubProjects = null;
+let fbUnsubUsers = null;
+let cloudRoom = EMBEDDED_ROOM_NAME;
+let isCloudConnected = false;
+
+const tabChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('donkaew_sync_channel') : null;
+if (tabChannel) {
+  tabChannel.onmessage = e => {
+    const msg = e.data || {};
+    if (msg.type === 'UPSERT_RECORD' && msg.record) {
+      mergeSingleRecordToMemory(msg.record);
+      saveLocalCacheOnly();
+      refreshAll();
+    } else if (msg.type === 'DELETE_RECORD' && msg.id) {
+      records = records.filter(x => x.id !== msg.id);
+      saveLocalCacheOnly();
+      refreshAll();
+    }
+  };
+}
+
+function mergeSingleRecordToMemory(rec) {
+  if (!rec || !rec.id) return;
+  const idx = records.findIndex(x => x.id === rec.id);
+  if (idx > -1) {
+    const oldTime = records[idx].updatedAt || '';
+    const newTime = rec.updatedAt || '';
+    if (!oldTime || newTime >= oldTime) records[idx] = rec;
+  } else {
+    records.push(rec);
+  }
+}
+
+function saveLocalCacheOnly() {
+  try {
+    const disk = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
+    const map = new Map();
+    if (Array.isArray(disk)) disk.forEach(r => { if (r && r.id) map.set(r.id, r); });
+    records.forEach(r => { if (r && r.id) map.set(r.id, r); });
+    records = [...map.values()];
+    localStorage.setItem(STORE_KEY, JSON.stringify(records));
+  } catch (e) {}
+}
+
+async function upsertRecordSafe(rec) {
+  mergeSingleRecordToMemory(rec);
+  saveLocalCacheOnly();
+  if (tabChannel) tabChannel.postMessage({ type: 'UPSERT_RECORD', record: rec });
+
+  if (isCloudConnected && fbDb && window.__FB) {
+    try {
+      const { doc, setDoc } = window.__FB;
+      await setDoc(doc(fbDb, `${cloudRoom}_projects`, rec.id), rec, { merge: true });
+      $('#saveStatus').textContent = 'ซิงค์ขึ้น Cloud เรียบร้อย (' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.)';
+    } catch (err) {
+      toast('บันทึกในเครื่องแล้ว แต่ส่งขึ้น Cloud ไม่สำเร็จ: ' + err.message, 'warn');
+    }
+  } else {
+    $('#saveStatus').textContent = 'บันทึกในเครื่องแล้ว (' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.)';
+  }
+  refreshAll();
+}
+
+async function removeRecordSafe(id) {
+  records = records.filter(x => x.id !== id);
+  try {
+    const disk = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
+    const filtered = Array.isArray(disk) ? disk.filter(x => x && x.id !== id) : [];
+    localStorage.setItem(STORE_KEY, JSON.stringify(filtered));
+  } catch (e) {}
+  if (tabChannel) tabChannel.postMessage({ type: 'DELETE_RECORD', id });
+
+  if (isCloudConnected && fbDb && window.__FB) {
+    try {
+      const { doc, deleteDoc } = window.__FB;
+      await deleteDoc(doc(fbDb, `${cloudRoom}_projects`, id));
+    } catch (err) {
+      toast('ลบจาก Cloud ไม่สำเร็จ: ' + err.message, 'warn');
+    }
+  }
+  refreshAll();
+}
+
+function updateCloudBadgeUI() {
+  const dot = $('#cloudDot');
+  const txt = $('#cloudStatusTxt');
+  const pushBtn = $('#btnPushLocal');
+  if (isCloudConnected) {
+    dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse';
+    txt.textContent = `ออนไลน์ (${cloudRoom})`;
+    pushBtn?.classList.remove('hidden');
+  } else {
+    dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400';
+    txt.textContent = 'โหมดเครื่องนี้ (ออฟไลน์)';
+    pushBtn?.classList.add('hidden');
+  }
+}
+
+function openCloudModal() {
+  const saved = JSON.parse(localStorage.getItem(CLOUD_KEY) || 'null');
+  const cfg = saved?.config || EMBEDDED_FIREBASE_CONFIG;
+  $('#fb_config_inp').value = JSON.stringify(cfg, null, 2);
+  $('#fb_room_inp').value = saved?.room || cloudRoom;
+  const m = $('#cloudModal');
+  m.classList.remove('hidden');
+  m.classList.add('flex');
+}
+function closeCloudModal() {
+  const m = $('#cloudModal');
+  m.classList.add('hidden');
+  m.classList.remove('flex');
+}
+
+function parseFirebaseConfigInput(raw) {
+  let txt = raw.trim();
+  if (!txt) return null;
+  const match = txt.match(/\{[\s\S]*\}/);
+  if (match) txt = match[0];
+  txt = txt.replace(/(['"])?([a-zA-Z0-9_]+)(['"])?\s*:/g, '"$2":').replace(/'/g, '"').replace(/,\s*\}/g, '}');
+  return JSON.parse(txt);
+}
+
+async function connectToFirebase(cfg, roomName) {
+  if (!window.__FB || !cfg || !cfg.projectId || cfg.projectId === 'your-project-id') {
+    isCloudConnected = false;
+    updateCloudBadgeUI();
+    return false;
+  }
+  try {
+    const { initializeApp, getApps, deleteApp, getFirestore, collection, onSnapshot } = window.__FB;
+    if (fbUnsubProjects) { fbUnsubProjects(); fbUnsubProjects = null; }
+    if (fbUnsubUsers) { fbUnsubUsers(); fbUnsubUsers = null; }
+
+    const existing = getApps();
+    for (const a of existing) await deleteApp(a);
+
+    const app = initializeApp(cfg);
+    fbDb = getFirestore(app);
+    cloudRoom = (roomName || EMBEDDED_ROOM_NAME).trim();
+
+    fbUnsubProjects = onSnapshot(collection(fbDb, `${cloudRoom}_projects`), snap => {
+      snap.docChanges().forEach(change => {
+        const data = change.doc.data();
+        if (change.type === 'added' || change.type === 'modified') {
+          mergeSingleRecordToMemory({ ...data, id: change.doc.id });
+        } else if (change.type === 'removed') {
+          records = records.filter(x => x.id !== change.doc.id);
+        }
+      });
+      saveLocalCacheOnly();
+      refreshAll();
+    }, err => {
+      toast('การเชื่อมต่อ Cloud ขัดข้อง: ' + err.message, 'error');
+      isCloudConnected = false;
+      updateCloudBadgeUI();
+    });
+
+    fbUnsubUsers = onSnapshot(collection(fbDb, `${cloudRoom}_users`), snap => {
+      snap.docChanges().forEach(change => {
+        const u = change.doc.data();
+        if ((change.type === 'added' || change.type === 'modified') && u?.name) {
+          const i = registeredUsers.findIndex(x => x.name === u.name);
+          if (i > -1) registeredUsers[i].role = u.role;
+          else registeredUsers.push({ name: u.name, role: u.role });
+        }
+      });
+      localStorage.setItem(USERS_LIST, JSON.stringify(registeredUsers));
+    });
+
+    isCloudConnected = true;
+    updateCloudBadgeUI();
+    return true;
+  } catch (e) {
+    toast('เชื่อมต่อ Firebase ไม่สำเร็จ: ' + e.message, 'error');
+    isCloudConnected = false;
+    updateCloudBadgeUI();
+    return false;
+  }
+}
+
+async function saveCloudConfig() {
+  try {
+    const cfg = parseFirebaseConfigInput($('#fb_config_inp').value);
+    const room = $('#fb_room_inp').value.trim() || EMBEDDED_ROOM_NAME;
+    if (!cfg || !cfg.projectId) return toast('กรุณาวาง Firebase Config ที่ถูกต้อง', 'warn');
+    localStorage.setItem(CLOUD_KEY, JSON.stringify({ config: cfg, room }));
+    const ok = await connectToFirebase(cfg, room);
+    if (ok) {
+      closeCloudModal();
+      toast(`เชื่อมต่อฐานข้อมูลออนไลน์ (${room}) สำเร็จแล้ว!`);
+    }
+  } catch (e) {
+    toast('รูปแบบ Firebase Config ไม่ถูกต้อง: ' + e.message, 'error');
+  }
+}
+
+async function syncLocalToCloud() {
+  if (!isCloudConnected || !fbDb || !window.__FB) return toast('กรุณาเชื่อมต่อ Cloud ก่อน', 'warn');
+  const { doc, setDoc } = window.__FB;
+  let count = 0;
+  for (const r of records) {
+    await setDoc(doc(fbDb, `${cloudRoom}_projects`, r.id), r, { merge: true });
+    count++;
+  }
+  toast(`ส่งข้อมูลทั้ง ${count} โครงการขึ้น Cloud สำเร็จ`);
+}
+
+function disconnectCloud() {
+  if (fbUnsubProjects) { fbUnsubProjects(); fbUnsubProjects = null; }
+  if (fbUnsubUsers) { fbUnsubUsers(); fbUnsubUsers = null; }
+  localStorage.removeItem(CLOUD_KEY);
+  isCloudConnected = false;
+  fbDb = null;
+  updateCloudBadgeUI();
+  closeCloudModal();
+  toast('สลับเป็นโหมดบันทึกในเครื่องเรียบร้อยแล้ว', 'info');
+}
+
+window.__initCloudOnReady = () => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CLOUD_KEY) || 'null');
+    const cfg = saved?.config || EMBEDDED_FIREBASE_CONFIG;
+    const room = saved?.room || EMBEDDED_ROOM_NAME;
+    if (cfg && cfg.projectId && cfg.projectId !== 'your-project-id') {
+      connectToFirebase(cfg, room);
+    } else {
+      updateCloudBadgeUI();
+    }
+  } catch (e) {
+    updateCloudBadgeUI();
+  }
+};
+
+/* ================================================================
+   LOAD STATE & USER MANAGEMENT
+================================================================ */
+function loadState() {
+  loadRefPrices();
+  try {
+    records = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
+    if (!Array.isArray(records)) records = [];
+  } catch (e) { records = []; }
+
+  try {
+    const savedUsers = JSON.parse(localStorage.getItem(USERS_LIST) || 'null');
+    registeredUsers = Array.isArray(savedUsers) && savedUsers.length ? savedUsers : [
+      { name: 'เจ้าหน้าที่วิเคราะห์นโยบายและแผน', role: 'นักวิเคราะห์นโยบายและแผน' },
+      { name: 'นายช่างโยธา เทศบาลเมืองดอนแก้ว', role: 'นายช่างโยธา' },
+      { name: 'นักพัฒนาชุมชน เทศบาลเมืองดอนแก้ว', role: 'นักพัฒนาชุมชน' }
+    ];
+  } catch (e) { registeredUsers = []; }
+
+  try {
+    const u = JSON.parse(localStorage.getItem(USER_KEY) || 'null');
+    if (u && u.name) currentUser = u;
+    else if (registeredUsers[0]) currentUser = registeredUsers[0];
+  } catch (e) {}
+}
+
+async function saveUsersState() {
+  localStorage.setItem(USERS_LIST, JSON.stringify(registeredUsers));
+  localStorage.setItem(USER_KEY, JSON.stringify(currentUser));
+  updateUserBadge();
+  if (isCloudConnected && fbDb && window.__FB && currentUser?.name) {
+    try {
+      const { doc, setDoc } = window.__FB;
+      const safeId = encodeURIComponent(currentUser.name);
+      await setDoc(doc(fbDb, `${cloudRoom}_users`, safeId), currentUser, { merge: true });
+    } catch (e) {}
+  }
+}
+
+function updateUserBadge() {
+  $('#curUserName').textContent = currentUser.name || 'ยังไม่ได้ระบุชื่อ';
+  $('#curUserRole').textContent = currentUser.role || 'เจ้าหน้าที่';
+  $('#formRecorderTxt').textContent = `${currentUser.name} (${currentUser.role || 'เจ้าหน้าที่'})`;
+}
+
+function openLoginModal() {
+  renderSavedUsers();
+  $('#u_name').value = '';
+  $('#u_role').value = '';
+  const m = $('#loginModal');
+  m.classList.remove('hidden');
+  m.classList.add('flex');
+}
+function closeLoginModal() {
+  const m = $('#loginModal');
+  m.classList.add('hidden');
+  m.classList.remove('flex');
+}
+
+function renderSavedUsers() {
+  const box = $('#savedUsersList');
+  if (!registeredUsers.length) {
+    box.innerHTML = `<div class="col-span-2 text-xs text-slate-400 py-3 text-center">ยังไม่มีรายชื่อที่ลงทะเบียนไว้</div>`;
+    return;
+  }
+  box.innerHTML = registeredUsers.map((u, idx) => {
+    const cnt = records.filter(r => r.recordedBy === u.name).length;
+    const active = currentUser.name === u.name;
+    return `
+      <div class="flex items-center justify-between gap-2 rounded-xl border ${active ? 'border-navy-800 bg-sky2-100/70' : 'border-slate-200 bg-white hover:border-sky2-500'} px-3 py-2.5 transition">
+        <button type="button" onclick="selectRegisteredUser(${idx})" class="flex-1 text-left min-w-0">
+          <div class="font-bold text-sm text-navy-800 truncate">${esc(u.name)}</div>
+          <div class="text-xs text-slate-500 truncate">${esc(u.role || 'เจ้าหน้าที่')} • บันทึก ${cnt} โครงการ</div>
+        </button>
+        <button type="button" onclick="removeRegisteredUser(${idx})" class="text-slate-400 hover:text-red-600 px-1.5 py-1 text-xs" title="ลบรายชื่อนี้">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+      </div>`;
+  }).join('');
+}
+
+function selectRegisteredUser(idx) {
+  const u = registeredUsers[idx];
+  if (!u) return;
+  currentUser = { name: u.name, role: u.role };
+  saveUsersState();
+  closeLoginModal();
+  toast(`เข้าใช้งานในชื่อ "${currentUser.name}" (${currentUser.role})`);
+  refreshAll();
+}
+
+function removeRegisteredUser(idx) {
+  registeredUsers.splice(idx, 1);
+  saveUsersState();
+  renderSavedUsers();
+}
+
+function registerAndLogin() {
+  const name = $('#u_name').value.trim();
+  const role = $('#u_role').value.trim() || 'เจ้าหน้าที่เทศบาล';
+  if (!name) return toast('กรุณากรอกชื่อ - นามสกุล', 'warn');
+  const existingIdx = registeredUsers.findIndex(u => u.name === name);
+  if (existingIdx > -1) registeredUsers[existingIdx].role = role;
+  else registeredUsers.unshift({ name, role });
+  currentUser = { name, role };
+  saveUsersState();
+  closeLoginModal();
+  toast(`ลงทะเบียนและเข้าใช้งานในชื่อ "${name}" เรียบร้อยแล้ว`);
+  refreshAll();
+}
+
+/* ================================================================
+   5) MULTI-COMPONENT BUILDER & AUTO PREVIEW
+================================================================ */
+function defaultComponent(cat = 'infra') {
+  return {
+    cid: uid(),
+    sub: cat === 'infra' ? 'road' : 'equip_item',
+    item: cat === 'infra' ? 'ก่อสร้างถนนคอนกรีตเสริมเหล็ก (คสล.)' : 'ชุดเครื่องเสียงตามสายพร้อมติดตั้ง',
+    dims: cat === 'infra' ? { width: 4, length: 150, thick: 0.15, area: '' } : { spec: '', qty: 1, unit: 'ชุด' },
+    unitPrice: cat === 'infra' ? getRefPrice('ก่อสร้างถนนคอนกรีตเสริมเหล็ก (คสล.)') : getRefPrice('ชุดเครื่องเสียงตามสายพร้อมติดตั้ง'),
+    bmode: 'calc',
+    lump: 0
+  };
+}
+
+function addWorkComponent() {
+  const cat = getRadio('f_cat') || 'infra';
+  const nextSub = cat === 'infra' ? (workComponents.length === 1 ? 'drain' : 'light') : 'equip_item';
+  const defItem = SUB_DEFS[nextSub].items[0] || '';
+  const ref = refPrices[defItem] || { price: 0, unit: 'ชุด' };
+  workComponents.push({
+    cid: uid(),
+    sub: nextSub,
+    item: defItem,
+    dims: nextSub === 'drain' ? { width: 0.4, length: 150, manhole: 5 } : { count: 10, dist: 300, qty: 1, unit: ref.unit },
+    unitPrice: ref.price || 0,
+    bmode: 'calc',
+    lump: 0
+  });
+  renderComponents();
+  if (reasonAuto) regenReason();
+  updatePreview();
+}
+
+function removeWorkComponent(idx) {
+  if (workComponents.length <= 1) return toast('โครงการต้องมีอย่างน้อย 1 รายการงาน', 'warn');
+  workComponents.splice(idx, 1);
+  renderComponents();
+  if (reasonAuto) regenReason();
+  updatePreview();
+}
+
+function renderComponents() {
+  const cat = getRadio('f_cat') || 'infra';
+  const subEntries = Object.entries(SUB_DEFS).filter(([, v]) => v.cat === cat);
+  const box = $('#compList');
+
+  box.innerHTML = workComponents.map((comp, idx) => {
+    const sDef = SUB_DEFS[comp.sub] || subEntries[0][1];
+    const calc = sDef.calc(comp.dims || {});
+    const subBudget = comp.bmode === 'lump' ? num(comp.lump) : calc.q * num(comp.unitPrice);
+
+    return `
+      <div class="rounded-xl border-2 border-slate-200 bg-slate-50/70 p-4 space-y-3" data-cidx="${idx}">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2.5">
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded-full bg-navy-800 text-gold-400 text-xs font-bold">งานที่ ${idx + 1}</span>
+            <select class="inp !w-auto !py-1.5 text-sm font-semibold" onchange="onCompSubChange(${idx}, this.value)">
+              ${subEntries.map(([k, v]) => `<option value="${k}" ${k === comp.sub ? 'selected' : ''}>${v.label}</option>`).join('')}
+            </select>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-navy-800 bg-gold-200/80 px-2.5 py-1 rounded-lg">
+              งบงานนี้: <span class="comp-sub-budget">${fmtMoney(subBudget)}</span> บาท
+            </span>
+            ${workComponents.length > 1 ? `
+              <button type="button" onclick="removeWorkComponent(${idx})" class="text-red-600 hover:bg-red-100 rounded-lg px-2 py-1 text-xs font-semibold">
+                <i class="fa-solid fa-trash-can"></i> ลบงานนี้
+              </button>` : ''}
+          </div>
+        </div>
+
+        <div>
+          <label class="lbl text-xs">รูปแบบการก่อสร้าง / รายการ (เลือกจากปุ่มแนะนำ หรือพิมพ์เอง) *</label>
+          <input class="inp font-medium" value="${esc(comp.item)}" placeholder="พิมพ์ชื่อรูปแบบงานก่อสร้าง หรือคลิกปุ่มด้านล่าง"
+                 oninput="onCompItemInput(${idx}, this.value)">
+          ${sDef.items.length ? `
+            <div class="flex flex-wrap gap-1.5 mt-2">
+              ${sDef.items.map(it => {
+                const rp = getRefPrice(it);
+                return `<button type="button" class="ichip ${comp.item === it ? 'on' : ''}" onclick="selectCompPreset(${idx}, '${esc(it)}')">
+                  ${esc(it)} ${rp ? `<span class="opacity-75">(${fmtNum(rp)} บ.)</span>` : ''}
+                </button>`;
+              }).join('')}
+            </div>` : ''}
+        </div>
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+          ${sDef.dims.map(df => `
+            <div class="${df.k === 'spec' || df.k === 'desc' ? 'sm:col-span-2' : ''}">
+              <label class="lbl text-xs">${df.label}</label>
+              <input type="${df.type === 'text' ? 'text' : 'number'}" step="any" min="0"
+                     class="inp !py-1.5 text-sm" value="${esc(comp.dims[df.k] ?? '')}"
+                     placeholder="${df.placeholder || ''}"
+                     oninput="onCompDimInput(${idx}, '${df.k}', this.value)">
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="grid sm:grid-cols-3 gap-3 pt-2 border-t border-slate-200/80 items-end">
+          <div>
+            <label class="lbl text-xs">วิธีคำนวณงบงานที่ ${idx + 1}</label>
+            <select class="inp !py-1.5 text-sm" onchange="onCompBmodeChange(${idx}, this.value)">
+              <option value="calc" ${comp.bmode !== 'lump' ? 'selected' : ''}>ปริมาณงาน × ราคาต่อหน่วย</option>
+              <option value="lump" ${comp.bmode === 'lump' ? 'selected' : ''}>ระบุงบเหมารวม</option>
+            </select>
+          </div>
+          ${comp.bmode !== 'lump' ? `
+            <div>
+              <label class="lbl text-xs flex justify-between">
+                <span>ราคาต่อหน่วย (บาท/${calc.u || 'หน่วย'})</span>
+                <span class="text-sky2-600 font-semibold">ราคากลางอ้างอิง</span>
+              </label>
+              <input type="number" step="any" min="0" class="inp !py-1.5 text-sm font-semibold text-navy-800"
+                     value="${comp.unitPrice || ''}" placeholder="0.00"
+                     oninput="onCompPriceInput(${idx}, this.value)">
+            </div>
+          ` : `
+            <div>
+              <label class="lbl text-xs">งบเหมารวมเฉพาะงานนี้ (บาท)</label>
+              <input type="number" step="any" min="0" class="inp !py-1.5 text-sm font-semibold text-navy-800"
+                     value="${comp.lump || ''}" placeholder="0.00"
+                     oninput="onCompLumpInput(${idx}, this.value)">
+            </div>
+          `}
+          <div class="text-xs text-slate-600 bg-white rounded-lg border border-slate-200 px-3 py-2">
+            <div>ปริมาณงาน: <b class="comp-qty-txt text-navy-800">${fmtNum(calc.q)} ${calc.u}</b></div>
+            <div class="truncate text-slate-500 comp-desc-txt">${esc(calc.desc || '-')}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function onCompSubChange(idx, newSub) {
+  const comp = workComponents[idx];
+  comp.sub = newSub;
+  const sDef = SUB_DEFS[newSub];
+  comp.item = sDef.items[0] || '';
+  comp.dims = {};
+  if (comp.item && refPrices[comp.item]) {
+    comp.unitPrice = refPrices[comp.item].price;
+    if (newSub === 'equip_item') {
+      comp.dims.qty = 1;
+      comp.dims.unit = refPrices[comp.item].unit || 'ชุด';
+    }
+  } else {
+    comp.unitPrice = 0;
+  }
+  renderComponents();
+  if (reasonAuto) regenReason();
+  updatePreview();
+}
+
+function selectCompPreset(idx, itemName) {
+  const comp = workComponents[idx];
+  comp.item = itemName;
+  if (refPrices[itemName]) {
+    comp.unitPrice = refPrices[itemName].price;
+    if (comp.sub === 'equip_item') {
+      comp.dims.unit = refPrices[itemName].unit || 'ชุด';
+      if (!comp.dims.qty) comp.dims.qty = 1;
+    }
+  }
+  renderComponents();
+  if (reasonAuto) regenReason();
+  updatePreview();
+}
+
+function onCompItemInput(idx, val) {
+  const comp = workComponents[idx];
+  comp.item = val.trim();
+  if (refPrices[comp.item]) comp.unitPrice = refPrices[comp.item].price;
+  if (reasonAuto) regenReason();
+  updatePreview();
+}
+
+function onCompDimInput(idx, key, val) {
+  workComponents[idx].dims[key] = val;
+  updateCompCardNumbers(idx);
+  updatePreview();
+}
+function onCompBmodeChange(idx, val) {
+  workComponents[idx].bmode = val;
+  renderComponents();
+  updatePreview();
+}
+function onCompPriceInput(idx, val) {
+  workComponents[idx].unitPrice = num(val);
+  updateCompCardNumbers(idx);
+  updatePreview();
+}
+function onCompLumpInput(idx, val) {
+  workComponents[idx].lump = num(val);
+  updateCompCardNumbers(idx);
+  updatePreview();
+}
+
+function updateCompCardNumbers(idx) {
+  const comp = workComponents[idx];
+  const sDef = SUB_DEFS[comp.sub];
+  const calc = sDef.calc(comp.dims || {});
+  const subBudget = comp.bmode === 'lump' ? num(comp.lump) : calc.q * num(comp.unitPrice);
+  const card = document.querySelector(`[data-cidx="${idx}"]`);
+  if (!card) return;
+  const bEl = card.querySelector('.comp-sub-budget');
+  const qEl = card.querySelector('.comp-qty-txt');
+  const dEl = card.querySelector('.comp-desc-txt');
+  if (bEl) bEl.textContent = fmtMoney(subBudget);
+  if (qEl) qEl.textContent = `${fmtNum(calc.q)} ${calc.u}`;
+  if (dEl) dEl.textContent = calc.desc || '-';
+}
+
+function computeAllComponents() {
+  let totalBudget = 0;
+  const details = workComponents.map(comp => {
+    const sDef = SUB_DEFS[comp.sub] || SUB_DEFS.road;
+    const c = sDef.calc(comp.dims || {});
+    const b = comp.bmode === 'lump' ? num(comp.lump) : c.q * num(comp.unitPrice);
+    totalBudget += b;
+    return {
+      ...comp,
+      subLabel: sDef.label,
+      dept: sDef.dept,
+      qty: c.q,
+      unit: c.u,
+      qtyDesc: c.desc,
+      budget: b
+    };
+  });
+  return { totalBudget, details };
+}
+
+function buildAutoTitle(d, compDetails) {
+  const v = vLabel(d.village);
+  if (!compDetails.length) return '';
+  const parts = compDetails.map((c, i) => {
+    const name = c.item || c.subLabel;
+    const cleanName = i > 0 ? name.replace(/^ก่อสร้าง|^ติดตั้ง|^จัดซื้อ/, 'พร้อม$&') : 'โครงการ' + (d.cat === 'equip' && !name.startsWith('จัดซื้อ') ? 'จัดซื้อ' + name : name);
+    return [cleanName, c.qtyDesc ? `(${c.qtyDesc})` : ''].filter(Boolean).join(' ');
+  });
+  return [parts.join(' '), d.locName, v].filter(Boolean).join(' ');
+}
+
+function buildAutoReason(compDetails) {
+  const reasons = [];
+  compDetails.forEach(c => {
+    const r = getRefReason(c.item);
+    if (r && !reasons.includes(r)) reasons.push(r);
+  });
+  if (!reasons.length) {
+    return 'เพื่อแก้ไขปัญหาความเดือดร้อนของประชาชนในพื้นที่ และพัฒนาโครงสร้างพื้นฐานสาธารณะให้ได้มาตรฐาน';
+  }
+  return reasons.join(' และ');
+}
+
+function regenTitle() { titleAuto = true; updateTitleBadge(); updatePreview(); }
+function regenReason() {
+  reasonAuto = true;
+  const { details } = computeAllComponents();
+  $('#f_reason').value = buildAutoReason(details);
+  updateReasonBadge();
+}
+
+function updateTitleBadge() {
+  const b = $('#titleBadge');
+  b.textContent = titleAuto ? 'สร้างชื่อรวมอัตโนมัติ' : 'แก้ไขชื่อเอง';
+  b.className = 'ml-auto text-xs font-medium rounded-full px-3 py-1 ' + (titleAuto ? 'bg-sky2-100 text-sky2-600' : 'bg-gold-200 text-navy-800');
+}
+function updateReasonBadge() {
+  const b = $('#reasonBadge');
+  b.textContent = reasonAuto ? 'สร้างเหตุผลอัตโนมัติ' : 'แก้ไขเอง';
+  b.className = 'ml-auto text-xs font-medium rounded-full px-3 py-1 ' + (reasonAuto ? 'bg-emerald-100 text-emerald-700' : 'bg-gold-200 text-navy-800');
+}
+
+function syncRefPrices() {
+  workComponents.forEach(comp => {
+    if (refPrices[comp.item]) comp.unitPrice = refPrices[comp.item].price;
+  });
+  renderComponents();
+  updatePreview();
+  toast('ซิงค์ราคากลางอ้างอิงล่าสุดเรียบร้อยแล้ว');
+}
+
+/* ================================================================
+   6) PRIORITY & ATOMIC FORM SAVE
+================================================================ */
+function setRadio(name, val) { const el = document.querySelector(`input[name="${name}"][value="${val}"]`); if (el) el.checked = true; }
+function getRadio(name) { return (document.querySelector(`input[name="${name}"]:checked`) || {}).value; }
+
+function getNextPriority(villageNo, year) {
+  if (!villageNo) return 1;
+  const existing = records.filter(r => r.village === +villageNo && (!year || r.year === +year) && r.id !== editingId);
+  if (!existing.length) return 1;
+  return Math.max(...existing.map(r => num(r.priority) || 0)) + 1;
+}
+function autoNextPriority() {
+  const v = +$('#f_village').value || 0;
+  const y = +$('#f_year').value || YEARS[0];
+  $('#f_priority').value = getNextPriority(v, y);
+  updatePreview();
+}
+
+function collectForm() {
+  const { totalBudget, details } = computeAllComponents();
+  const main = details[0] || {};
+  return {
+    year: +$('#f_year').value || YEARS[0],
+    village: +$('#f_village').value || 0,
+    priority: Math.max(1, Math.round(num($('#f_priority').value) || 1)),
+    urgency: getRadio('f_urgency') || 'normal',
+    cat: getRadio('f_cat') || 'infra',
+    sub: main.sub || 'road',
+    item: details.map(d => d.item).filter(Boolean).join(' + '),
+    components: details,
+    qty: details.length > 1 ? details.length : (main.qty || 1),
+    unit: details.length > 1 ? 'รายการงาน' : (main.unit || 'แห่ง'),
+    qtyDesc: details.map((d, i) => `${details.length > 1 ? `(${i + 1}) ` : ''}${d.item || d.subLabel} ${d.qtyDesc || ''}`).join(' • '),
+    budget: totalBudget,
+    title: $('#f_title').value.trim(),
+    locName: $('#f_locName').value.trim(),
+    start: $('#f_start').value.trim(),
+    end: $('#f_end').value.trim(),
+    gps: $('#f_gps').value.trim(),
+    reason: $('#f_reason').value.trim(),
+    households: num($('#f_households').value),
+    proposer: $('#f_proposer').value.trim() || 'มติที่ประชุมประชาคมหมู่บ้าน'
+  };
+}
+
+function updatePreview() {
+  const { totalBudget, details } = computeAllComponents();
+  const d = {
+    year: +$('#f_year').value || YEARS[0],
+    village: +$('#f_village').value || 0,
+    priority: Math.max(1, Math.round(num($('#f_priority').value) || 1)),
+    urgency: getRadio('f_urgency') || 'normal',
+    cat: getRadio('f_cat') || 'infra',
+    locName: $('#f_locName').value.trim(),
+    households: num($('#f_households').value)
+  };
+
+  if (titleAuto) $('#f_title').value = buildAutoTitle(d, details);
+  if (reasonAuto && !$('#f_reason').value.trim()) $('#f_reason').value = buildAutoReason(details);
+
+  $('#calcFormula').textContent = `รวมงบประมาณทั้งโครงการ (${details.length} งาน)`;
+  $('#calcTotal').textContent = fmtMoney(totalBudget);
+
+  const title = $('#f_title').value.trim();
+  const u = URG[d.urgency];
+  $('#pv').innerHTML = `
+    <div class="flex flex-wrap gap-1.5 mb-3">
+      <span class="text-[11px] font-bold rounded-full px-2.5 py-0.5 bg-gold-400 text-navy-900">ลำดับความต้องการที่ ${d.priority}</span>
+      <span class="text-[11px] rounded-full px-2 py-0.5 bg-white/15">${d.cat === 'infra' ? 'โครงสร้างพื้นฐาน' : 'ครุภัณฑ์'} (${details.length} งาน)</span>
+      <span class="text-[11px] rounded-full px-2 py-0.5 border ${u.badge}">${u.label}</span>
+    </div>
+    <p class="font-semibold leading-snug text-sm">${esc(title) || '<span class="opacity-60">— ยังไม่มีชื่อโครงการ —</span>'}</p>
+    <div class="mt-3 space-y-1 text-xs text-sky-100 border-t border-white/15 pt-2.5">
+      ${details.map((c, i) => `
+        <div class="flex justify-between gap-2">
+          <span class="truncate">${i + 1}. ${esc(c.item || c.subLabel)}</span>
+          <b class="text-gold-200 shrink-0">${fmtMoney(c.budget)} บ.</b>
+        </div>
+      `).join('')}
+    </div>
+    <div class="mt-3 space-y-1 text-xs text-sky-100 border-t border-white/15 pt-2.5">
+      <div class="flex justify-between"><span>ปีงบประมาณ</span><b class="text-white">พ.ศ. ${d.year}</b></div>
+      <div class="flex justify-between"><span>หมู่บ้าน</span><b class="text-white">${vLabel(d.village) || '-'}</b></div>
+      <div class="flex justify-between"><span>ผู้บันทึก</span><b class="text-white">${esc(currentUser.name)}</b></div>
+    </div>
+    <div class="mt-4 pt-3 border-t border-white/20">
+      <div class="text-xs text-sky-200">งบประมาณรวมทั้งโครงการ</div>
+      <div class="text-3xl font-bold text-gold-400">${fmtMoney(totalBudget)}</div>
+      <div class="text-xs text-sky-200">บาท</div>
+    </div>`;
+}
+
+function resetForm(full = false) {
+  editingId = null;
+  titleAuto = true;
+  reasonAuto = true;
+  const cat = getRadio('f_cat') || 'infra';
+  workComponents = [defaultComponent(cat)];
+  ['#f_title', '#f_locName', '#f_start', '#f_end', '#f_gps', '#f_households'].forEach(s => $(s).value = '');
+  $('#f_proposer').value = 'มติที่ประชุมประชาคมหมู่บ้าน';
+  if (full) {
+    $('#f_village').value = '';
+    setRadio('f_urgency', 'normal');
+  }
+  autoNextPriority();
+  renderComponents();
+  regenReason();
+  $('#editBanner').classList.add('hidden');
+  $('#btnSaveTxt').textContent = 'บันทึกโครงการ (ไม่ทับข้อมูลคนอื่น)';
+  $('#formErrors').classList.add('hidden');
+  updateTitleBadge();
+  updateReasonBadge();
+  updatePreview();
+}
+
+async function saveForm() {
+  const d = collectForm();
+  const errs = [];
+  if (!d.village) errs.push('กรุณาเลือกหมู่บ้าน (ขั้นที่ 1)');
+  if (!d.components.some(c => c.item)) errs.push('กรุณาระบุรูปแบบงานก่อสร้างหรือชื่อครุภัณฑ์ (ขั้นที่ 3)');
+  if (d.budget <= 0) errs.push('งบประมาณรวมต้องมากกว่า 0 บาท (ขั้นที่ 3)');
+  if (!d.title) errs.push('กรุณาระบุชื่อโครงการ (ขั้นที่ 4)');
+
+  const errBox = $('#formErrors');
+  if (errs.length) {
+    errBox.innerHTML = `<div class="font-bold mb-1"><i class="fa-solid fa-circle-exclamation"></i> กรุณาตรวจสอบข้อมูล:</div>
+      <ul class="list-disc pl-5">${errs.map(e => `<li>${e}</li>`).join('')}</ul>`;
+    errBox.classList.remove('hidden');
+    toast(errs[0], 'warn');
+    return;
+  }
+  errBox.classList.add('hidden');
+
+  if (!editingId) {
+    const clashPriority = records.find(r => r.village === d.village && r.year === d.year && num(r.priority) === d.priority);
+    if (clashPriority) {
+      const nextP = getNextPriority(d.village, d.year);
+      toast(`ลำดับที่ ${d.priority} มีผู้บันทึกไว้แล้ว (${clashPriority.recordedBy}) ระบบจัดเป็นลำดับที่ ${nextP} ให้แทน`, 'info');
+      d.priority = nextP;
+    }
+  }
+
+  const now = new Date().toISOString();
+  const wasEdit = !!editingId;
+  let recToSave;
+
+  if (wasEdit) {
+    const old = records.find(x => x.id === editingId) || {};
+    recToSave = {
+      ...old,
+      ...d,
+      id: editingId,
+      recordedBy: old.recordedBy || currentUser.name,
+      recorderRole: old.recorderRole || currentUser.role,
+      updatedBy: currentUser.name,
+      updatedByRole: currentUser.role,
+      updatedAt: now
+    };
+  } else {
+    recToSave = {
+      ...d,
+      id: uid(),
+      recordedBy: currentUser.name,
+      recorderRole: currentUser.role,
+      createdAt: now,
+      updatedAt: now
+    };
+  }
+
+  await upsertRecordSafe(recToSave);
+  toast(wasEdit ? 'อัปเดตข้อมูลโครงการเรียบร้อยแล้ว' : `บันทึกโครงการใหม่ (ลำดับที่ ${recToSave.priority}) สำเร็จ`);
+  resetForm();
+  if (wasEdit) showTab('table');
+  else window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function editRecord(id) {
+  const r = records.find(x => x.id === id);
+  if (!r) return;
+
+  if (r.recordedBy && r.recordedBy !== currentUser.name) {
+    const ok = await askConfirm(
+      'รายการนี้บันทึกโดยเจ้าหน้าที่ท่านอื่น',
+      `โครงการนี้ถูกบันทึกโดย "${r.recordedBy}" (${r.recorderRole || ''}) คุณต้องการแก้ไขรายการนี้หรือไม่?`,
+      'ดำเนินการแก้ไข'
+    );
+    if (!ok) return;
+  }
+
+  showTab('form');
+  editingId = id;
+  $('#f_year').value = r.year;
+  $('#f_village').value = r.village;
+  $('#f_priority').value = r.priority || 1;
+  setRadio('f_urgency', r.urgency || 'normal');
+  setRadio('f_cat', r.cat || 'infra');
+
+  if (Array.isArray(r.components) && r.components.length) {
+    workComponents = JSON.parse(JSON.stringify(r.components));
+  } else {
+    workComponents = [{
+      cid: uid(),
+      sub: r.sub || (r.cat === 'equip' ? 'equip_item' : 'road'),
+      item: r.item || '',
+      dims: r.dims || { qty: r.qty || 1, unit: r.unit || 'แห่ง' },
+      unitPrice: r.unitPrice || 0,
+      bmode: r.bmode || 'lump',
+      lump: r.budget || 0
+    }];
+  }
+  renderComponents();
+  titleAuto = false;
+  reasonAuto = false;
+  $('#f_title').value = r.title || '';
+  $('#f_locName').value = r.locName || '';
+  $('#f_start').value = r.start || '';
+  $('#f_end').value = r.end || '';
+  $('#f_gps').value = r.gps || '';
+  $('#f_reason').value = r.reason || '';
+  $('#f_households').value = r.households || '';
+  $('#f_proposer').value = r.proposer || 'มติที่ประชุมประชาคมหมู่บ้าน';
+
+  updateTitleBadge();
+  updateReasonBadge();
+  updatePreview();
+  $('#editOwnerInfo').textContent = `ผู้สร้างเดิม: ${r.recordedBy || '-'} (${r.recorderRole || '-'}) • รหัสโครงการ: ${r.id}`;
+  $('#editBanner').classList.remove('hidden');
+  $('#btnSaveTxt').textContent = 'บันทึกการแก้ไขเฉพาะรายการนี้';
+}
+
+async function deleteRecord(id) {
+  const r = records.find(x => x.id === id);
+  if (!r) return;
+  const ownerWarn = r.recordedBy && r.recordedBy !== currentUser.name ? ` (บันทึกโดย ${r.recordedBy})` : '';
+  if (!(await askConfirm('ยืนยันการลบโครงการ' + ownerWarn, r.title, 'ลบโครงการ'))) return;
+  await removeRecordSafe(id);
+  toast('ลบโครงการเรียบร้อยแล้ว', 'info');
+}
+
+async function changePriority(id, delta) {
+  const r = records.find(x => x.id === id);
+  if (!r) return;
+  r.priority = Math.max(1, (num(r.priority) || 1) + delta);
+  r.updatedAt = new Date().toISOString();
+  r.updatedBy = currentUser.name;
+  await upsertRecordSafe(r);
+}
+async function setPriorityDirect(id, val) {
+  const r = records.find(x => x.id === id);
+  if (!r) return;
+  r.priority = Math.max(1, Math.round(num(val) || 1));
+  r.updatedAt = new Date().toISOString();
+  r.updatedBy = currentUser.name;
+  await upsertRecordSafe(r);
+}
+
+/* ================================================================
+   7) DASHBOARD & MATRIX
+================================================================ */
+function renderDashboard() {
+  const fy = $('#d_year').value, fv = +$('#d_village').value || 0;
+  const hasAny = records.length > 0;
+  $('#dashEmpty').classList.toggle('hidden', hasAny);
+  $('#dashBody').classList.toggle('hidden', !hasAny);
+  if (!hasAny) return;
+
+  const list = records.filter(r => !fy || r.year == fy);
+  const scope = fv ? list.filter(r => r.village === fv) : list;
+  const inf = scope.filter(r => r.cat === 'infra'), eq = scope.filter(r => r.cat === 'equip');
+  const tot = sumBudget(scope), bi = sumBudget(inf), be = sumBudget(eq);
+  const urgent = scope.filter(r => r.urgency === 'high').length;
+  const scopeTxt = fv ? vLabel(fv) : 'ทั้งตำบล 10 หมู่บ้าน';
+
+  const kpi = (icon, label, val, sub, color) => `
+    <div class="card relative overflow-hidden">
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <p class="text-sm text-slate-500">${label}</p>
+          <p class="text-2xl font-bold text-navy-800 mt-1 break-words">${val}</p>
+          <p class="text-xs text-slate-500 mt-1">${sub}</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl grid place-items-center ${color} text-white shrink-0"><i class="fa-solid ${icon} text-xl"></i></div>
+      </div>
+    </div>`;
+
+  $('#kpiWrap').innerHTML =
+    kpi('fa-list-check', 'จำนวนโครงการทั้งหมด', fmtNum(scope.length) + ' โครงการ', `${scopeTxt} • เร่งด่วนมาก ${urgent} โครงการ`, 'bg-navy-700') +
+    kpi('fa-coins', 'งบประมาณรวมทั้งสิ้น', fmtMoney(tot), 'บาท • ' + scopeTxt, 'bg-sky2-600') +
+    kpi('fa-helmet-safety', 'งบโครงสร้างพื้นฐาน', fmtMoney(bi), `บาท (${inf.length} โครงการ • ${pct(bi, tot).toFixed(1)}%)`, 'bg-navy-800') +
+    kpi('fa-boxes-stacked', 'งบครุภัณฑ์หมู่บ้าน', fmtMoney(be), `บาท (${eq.length} โครงการ • ${pct(be, tot).toFixed(1)}%)`, 'bg-gold-500');
+
+  const yearTotals = YEARS.map(() => ({ n: 0, b: 0 }));
+  let grandN = 0, grandB = 0;
+
+  const matrixRows = VILLAGES.map(v => {
+    const vRecs = records.filter(r => r.village === v.no);
+    let rowN = 0, rowB = 0;
+    const cells = YEARS.map((y, yi) => {
+      const yr = vRecs.filter(r => r.year === y);
+      const nb = sumBudget(yr);
+      rowN += yr.length; rowB += nb;
+      yearTotals[yi].n += yr.length; yearTotals[yi].b += nb;
+      grandN += yr.length; grandB += nb;
+      return `<td class="px-2.5 py-2 text-right border border-slate-200 ${yr.length ? 'bg-white' : 'bg-slate-50/60 text-slate-400'}">
+        <div class="font-semibold text-navy-800">${nb ? fmtMoney(nb) : '-'}</div>
+        <div class="text-[11px] text-slate-500">${yr.length ? `${yr.length} โครงการ` : ''}</div>
+      </td>`;
+    }).join('');
+    return `<tr class="hover:bg-sky2-100/30">
+      <td class="px-3 py-2 font-semibold text-navy-800 border border-slate-200 whitespace-nowrap">หมู่ที่ ${v.no} ${v.name}</td>
+      ${cells}
+      <td class="px-3 py-2 text-right font-bold bg-gold-50 border border-slate-200 whitespace-nowrap">
+        <div class="text-navy-900">${fmtMoney(rowB)}</div>
+        <div class="text-[11px] text-slate-600">${rowN} โครงการ</div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  $('#matrixWrap').innerHTML = `
+    <table class="w-full text-xs border-collapse">
+      <thead>
+        <tr class="bg-navy-800 text-white">
+          <th class="px-3 py-2.5 text-left border border-navy-700">หมู่บ้าน</th>
+          ${YEARS.map(y => `<th class="px-3 py-2.5 text-right border border-navy-700">ปีงบฯ ${y} (บาท)</th>`).join('')}
+          <th class="px-3 py-2.5 text-right bg-navy-900 border border-navy-700">รวม 5 ปี (บาท)</th>
+        </tr>
+      </thead>
+      <tbody>${matrixRows}</tbody>
+      <tfoot>
+        <tr class="bg-sky2-100 font-bold text-navy-900">
+          <td class="px-3 py-2.5 border border-slate-300">รวมทั้งตำบล (10 หมู่บ้าน)</td>
+          ${yearTotals.map(t => `<td class="px-2.5 py-2.5 text-right border border-slate-300">
+            <div>${fmtMoney(t.b)}</div>
+            <div class="text-[11px] font-normal text-slate-600">${t.n} โครงการ</div>
+          </td>`).join('')}
+          <td class="px-3 py-2.5 text-right bg-gold-200 border border-slate-300">
+            <div>${fmtMoney(grandB)}</div>
+            <div class="text-[11px] font-normal text-navy-900">${grandN} โครงการ</div>
+          </td>
+        </tr>
+      </tfoot>
+    </table>`;
+
+  const stats = VILLAGES.map(v => {
+    const rs = list.filter(r => r.village === v.no);
+    const a = sumBudget(rs.filter(r => r.cat === 'infra')), b = sumBudget(rs.filter(r => r.cat === 'equip'));
+    return { v, n: rs.length, a, b, t: a + b };
+  });
+  const max = Math.max(1, ...stats.map(s => s.t));
+  $('#villageChart').innerHTML = stats.map(s => `
+    <div class="grid grid-cols-12 items-center gap-2 rounded-xl px-2 py-1.5 cursor-pointer hover:bg-sky2-100/60 ${fv === s.v.no ? 'bg-gold-50 ring-1 ring-gold-400' : ''}"
+         onclick="document.getElementById('d_village').value='${fv === s.v.no ? '' : s.v.no}';renderDashboard()">
+      <div class="col-span-12 sm:col-span-4 text-sm">
+        <span class="font-semibold text-navy-800">หมู่ที่ ${s.v.no}</span> <span class="text-slate-600">${s.v.name}</span>
+      </div>
+      <div class="col-span-7 sm:col-span-5">
+        <div class="h-4 rounded-full bg-slate-100 overflow-hidden flex">
+          <div class="bg-navy-700" style="width:${s.a / max * 100}%"></div>
+          <div class="bg-gold-400" style="width:${s.b / max * 100}%"></div>
+        </div>
+      </div>
+      <div class="col-span-5 sm:col-span-3 text-right text-xs">
+        <div class="font-bold text-navy-800">${fmtMoney(s.t)} บ.</div>
+        <div class="text-slate-500">${s.n} โครงการ</div>
+      </div>
+    </div>`).join('');
+
+  const recMap = new Map();
+  scope.forEach(r => {
+    const k = r.recordedBy || 'ไม่ระบุ';
+    if (!recMap.has(k)) recMap.set(k, { name: k, role: r.recorderRole || '', n: 0, b: 0 });
+    const o = recMap.get(k);
+    o.n += 1; o.b += num(r.budget);
+  });
+  $('#recorderChart').innerHTML = [...recMap.values()].map(u => `
+    <div class="flex items-center justify-between gap-2 text-xs border-b border-slate-100 pb-2">
+      <div class="min-w-0">
+        <div class="font-bold text-navy-800 truncate">${esc(u.name)}</div>
+        <div class="text-slate-500 truncate">${esc(u.role || 'เจ้าหน้าที่')}</div>
+      </div>
+      <div class="text-right shrink-0">
+        <div class="font-bold text-sky2-600">${u.n} โครงการ</div>
+        <div class="text-slate-500">${fmtMoney(u.b)} บ.</div>
+      </div>
+    </div>`).join('');
+
+  $('#urgChart').innerHTML = Object.entries(URG).map(([k, u]) => {
+    const rs = scope.filter(r => r.urgency === k);
+    return `<div>
+      <div class="flex justify-between text-xs mb-1">
+        <span class="font-medium">${u.label}</span>
+        <span class="font-bold text-navy-800">${rs.length} โครงการ (${fmtMoney(sumBudget(rs))} บ.)</span>
+      </div>
+      <div class="h-2 rounded-full bg-slate-100 overflow-hidden"><div class="h-full ${u.bar}" style="width:${pct(rs.length, scope.length)}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+/* ================================================================
+   8) TABLE VIEW
+================================================================ */
+const sortRecs = arr => [...arr].sort((a, b) =>
+  a.village - b.village ||
+  a.year - b.year ||
+  (num(a.priority) || 999) - (num(b.priority) || 999) ||
+  URG[a.urgency || 'normal'].rank - URG[b.urgency || 'normal'].rank
+);
+
+function getFiltered() {
+  const q = $('#t_search').value.trim().toLowerCase();
+  const v = +$('#t_village').value || 0;
+  const y = $('#t_year').value;
+  const c = $('#t_cat').value;
+  const rec = $('#t_recorder').value;
+  return sortRecs(records.filter(r =>
+    (!v || r.village === v) &&
+    (!y || r.year == y) &&
+    (!c || r.cat === c) &&
+    (!rec || r.recordedBy === rec) &&
+    (!q || [r.title, r.item, r.locName, r.reason, r.recordedBy, r.recorderRole, vLabel(r.village)].join(' ').toLowerCase().includes(q))
+  ));
+}
+
+function renderTable() {
+  const recorders = [...new Set(records.map(r => r.recordedBy).filter(Boolean))];
+  const curRec = $('#t_recorder').value;
+  $('#t_recorder').innerHTML = '<option value="">ผู้บันทึกทั้งหมด</option>' +
+    recorders.map(n => `<option value="${esc(n)}" ${n === curRec ? 'selected' : ''}>${esc(n)}</option>`).join('');
+
+  const list = getFiltered();
+  $('#tSummary').innerHTML = `แสดง <b class="text-navy-800">${list.length}</b> จากทั้งหมด ${records.length} โครงการ • งบประมาณรวม <b class="text-navy-800">${fmtMoney(sumBudget(list))}</b> บาท`;
+
+  if (!list.length) {
+    $('#tBody').innerHTML = `<tr><td colspan="8" class="text-center py-12 text-slate-400">ไม่พบข้อมูลโครงการตามเงื่อนไขที่เลือก</td></tr>`;
+    $('#tFoot').innerHTML = '';
+    return;
+  }
+
+  $('#tBody').innerHTML = list.map(r => {
+    const u = URG[r.urgency || 'normal'];
+    const comps = Array.isArray(r.components) && r.components.length ? r.components : [];
+    const isMine = r.recordedBy === currentUser.name;
+    return `<tr class="border-b border-slate-100 hover:bg-sky2-100/30 align-top">
+      <td class="px-3 py-3 text-center whitespace-nowrap">
+        <div class="inline-flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+          <input type="number" min="1" value="${r.priority || 1}"
+                 onchange="setPriorityDirect('${r.id}', this.value)"
+                 class="w-12 text-center font-bold text-navy-800 bg-white rounded border border-slate-300 py-0.5 text-xs">
+          <div class="flex flex-col">
+            <button type="button" onclick="changePriority('${r.id}', -1)" class="text-[10px] px-1 hover:text-sky2-600" title="เลื่อนลำดับขึ้น">▲</button>
+            <button type="button" onclick="changePriority('${r.id}', 1)" class="text-[10px] px-1 hover:text-sky2-600" title="เลื่อนลำดับลง">▼</button>
+          </div>
+        </div>
+      </td>
+      <td class="px-3 py-3 whitespace-nowrap font-semibold">พ.ศ. ${r.year}</td>
+      <td class="px-3 py-3 whitespace-nowrap">
+        <div class="font-bold text-navy-800">หมู่ที่ ${r.village}</div>
+        <div class="text-xs text-slate-500">${VILLAGES[r.village - 1]?.name || ''}</div>
+      </td>
+      <td class="px-3 py-3 min-w-[300px]">
+        <div class="flex flex-wrap gap-1 mb-1">
+          <span class="text-[11px] rounded-full px-2 py-0.5 ${r.cat === 'infra' ? 'bg-navy-800 text-white' : 'bg-gold-200 text-navy-900'}">${r.cat === 'infra' ? 'โครงสร้างพื้นฐาน' : 'ครุภัณฑ์'}</span>
+          ${comps.length > 1 ? `<span class="text-[11px] rounded-full px-2 py-0.5 bg-sky2-100 text-sky2-600 font-semibold">รวม ${comps.length} งานในโครงการเดียว</span>` : ''}
+        </div>
+        <div class="font-semibold text-slate-800">${esc(r.title)}</div>
+        <div class="text-xs text-slate-600 mt-1">${esc(r.qtyDesc || '')}</div>
+        ${r.reason ? `<div class="text-xs text-slate-500 mt-0.5"><b>เหตุผล:</b> ${esc(r.reason)}</div>` : ''}
+      </td>
+      <td class="px-3 py-3 text-right whitespace-nowrap font-bold text-navy-800">${fmtMoney(r.budget)}</td>
+      <td class="px-3 py-3 text-center"><span class="text-xs rounded-full border px-2 py-0.5 whitespace-nowrap ${u.badge}">${u.label}</span></td>
+      <td class="px-3 py-3 text-xs whitespace-nowrap">
+        <div class="font-semibold ${isMine ? 'text-emerald-700' : 'text-navy-800'}">
+          <i class="fa-solid ${isMine ? 'fa-user-check' : 'fa-user'} mr-1"></i>${esc(r.recordedBy || '-')}
+        </div>
+        <div class="text-slate-500">${esc(r.recorderRole || '')}</div>
+        ${r.updatedBy && r.updatedBy !== r.recordedBy ? `<div class="text-[10px] text-amber-700 mt-0.5">แก้ไขล่าสุด: ${esc(r.updatedBy)}</div>` : ''}
+      </td>
+      <td class="px-3 py-3 text-center whitespace-nowrap">
+        <button class="w-8 h-8 rounded-lg bg-sky2-100 text-sky2-600 hover:bg-sky2-600 hover:text-white" title="แก้ไข" onclick="editRecord('${r.id}')"><i class="fa-solid fa-pen"></i></button>
+        <button class="w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white ml-1" title="ลบ" onclick="deleteRecord('${r.id}')"><i class="fa-solid fa-trash"></i></button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  $('#tFoot').innerHTML = `<tr class="bg-gold-50 font-bold text-navy-800">
+    <td colspan="4" class="px-3 py-3 text-right">รวมงบประมาณ (${list.length} โครงการ)</td>
+    <td class="px-3 py-3 text-right whitespace-nowrap">${fmtMoney(sumBudget(list))}</td>
+    <td colspan="3"></td>
+  </tr>`;
+}
+
+/* ================================================================
+   9) REPORT & PRINT
+================================================================ */
+function renderReport() {
+  const fv = +$('#r_village').value || 0, fy = $('#r_year').value, fc = $('#r_cat').value;
+  const list = sortRecs(records.filter(r => (!fy || r.year == fy) && (!fc || r.cat === fc) && (!fv || r.village === fv)));
+  const yTxt = fy ? `ประจำปีงบประมาณ พ.ศ. ${fy}` : `แผนพัฒนาท้องถิ่น (พ.ศ. ${YEARS[0]} – ${YEARS[YEARS.length - 1]})`;
+  const printed = `พิมพ์เมื่อ ${new Date().toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'short' })} น.`;
+
+  if (!list.length) {
+    $('#reportArea').innerHTML = `<div class="text-center py-16 text-slate-400">ไม่มีข้อมูลโครงการตามเงื่อนไขที่เลือก</div>`;
+    return;
+  }
+
+  let html = '';
+
+  if (!fv) {
+    const rows = VILLAGES.map(v => {
+      const vrs = list.filter(r => r.village === v.no);
+      const yCells = YEARS.map(y => {
+        const yrs = vrs.filter(r => r.year === y);
+        return `<td class="text-right">${yrs.length ? `${fmtMoney(sumBudget(yrs))}<br><span class="text-[10px] text-slate-500">(${yrs.length} โครงการ)</span>` : '-'}</td>`;
+      }).join('');
+      return `<tr>
+        <td class="text-center">${v.no}</td>
+        <td>${v.name}</td>
+        ${yCells}
+        <td class="text-center font-semibold">${vrs.length}</td>
+        <td class="text-right font-bold">${fmtMoney(sumBudget(vrs))}</td>
+      </tr>`;
+    }).join('');
+
+    html += `<div class="print-page">
+      <div class="text-center mb-4">
+        <div class="text-lg font-bold text-navy-800">สรุปงบประมาณโครงการพัฒนาท้องถิ่นแยกตามปีงบประมาณและหมู่บ้าน</div>
+        <div class="font-semibold">${yTxt} • ${ORG}</div>
+      </div>
+      <table class="rpt">
+        <thead>
+          <tr>
+            <th>หมู่ที่</th><th>ชื่อหมู่บ้าน</th>
+            ${YEARS.map(y => `<th>ปีงบฯ ${y} (บาท)</th>`).join('')}
+            <th>รวมโครงการ</th><th>งบประมาณรวม 5 ปี (บาท)</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <p class="text-right text-xs text-slate-500 mt-2">${printed}</p>
+    </div>`;
+  }
+
+  const vs = fv ? [fv] : VILLAGES.map(v => v.no).filter(no => list.some(r => r.village === no));
+  vs.forEach(no => {
+    const rs = list.filter(r => r.village === no);
+    const yearSummaryBoxes = YEARS.map(y => {
+      const yrs = rs.filter(r => r.year === y);
+      return `<div class="border border-slate-300 rounded-lg p-2 text-center bg-slate-50">
+        <div class="font-bold text-navy-800 text-xs">ปีงบประมาณ พ.ศ. ${y}</div>
+        <div class="text-sm font-bold text-sky2-600 mt-0.5">${fmtMoney(sumBudget(yrs))} บาท</div>
+        <div class="text-[11px] text-slate-500">จำนวน ${yrs.length} โครงการ</div>
+      </div>`;
+    }).join('');
+
+    const rows = rs.map(r => `
+      <tr>
+        <td class="text-center font-bold">${r.priority || 1}</td>
+        <td class="text-center">${r.year}</td>
+        <td>
+          <div class="font-semibold">${esc(r.title)}</div>
+          <div class="text-[11px] text-slate-500">${r.cat === 'infra' ? 'หมวดโครงสร้างพื้นฐาน' : 'หมวดครุภัณฑ์'}</div>
+        </td>
+        <td>${esc(r.qtyDesc || '-')}</td>
+        <td>${esc(r.reason || '-')}</td>
+        <td>${esc([r.locName, r.start && r.end ? `${r.start}-${r.end}` : ''].filter(Boolean).join(' ') || '-')}</td>
+        <td class="text-right font-semibold whitespace-nowrap">${fmtMoney(r.budget)}</td>
+        <td class="text-center">${URG[r.urgency || 'normal'].label}</td>
+        <td class="text-xs">${esc(r.recordedBy || '-')}<br><span class="text-[10px] text-slate-500">${esc(r.recorderRole || '')}</span></td>
+      </tr>`).join('');
+
+    html += `<div class="print-page">
+      <div class="text-center mb-3">
+        <div class="text-lg font-bold text-navy-800">บัญชีลำดับความต้องการโครงการพัฒนาท้องถิ่น ${vLabel(no)}</div>
+        <div class="font-semibold">${yTxt} • ${ORG}</div>
+      </div>
+      <div class="grid grid-cols-5 gap-2 mb-3">${yearSummaryBoxes}</div>
+      <table class="rpt">
+        <thead>
+          <tr>
+            <th style="width:52px">ลำดับที่</th>
+            <th style="width:60px">ปีงบฯ</th>
+            <th style="width:22%">ชื่อโครงการ/รายการ</th>
+            <th>ปริมาณงาน/ขนาด</th>
+            <th>เหตุผลความจำเป็น</th>
+            <th>สถานที่ดำเนินการ</th>
+            <th>งบประมาณ (บาท)</th>
+            <th>ความเร่งด่วน</th>
+            <th>ผู้บันทึก</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+          <tr class="tot">
+            <td colspan="6" class="text-right">รวมทั้งสิ้น ${vLabel(no)} (${rs.length} โครงการ)</td>
+            <td class="text-right whitespace-nowrap">${fmtMoney(sumBudget(rs))}</td>
+            <td colspan="2"></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="grid grid-cols-3 gap-6 mt-8 text-center text-xs">
+        <div>ลงชื่อ .......................................................<br>(${esc(currentUser.name)})<br>${esc(currentUser.role || 'เจ้าหน้าที่ผู้รวบรวมข้อมูล')}</div>
+        <div>ลงชื่อ .......................................................<br>(.......................................................)<br>หัวหน้าฝ่าย/ผู้อำนวยการกอง</div>
+        <div>ลงชื่อ .......................................................<br>(.......................................................)<br>ปลัดเทศบาลเมืองดอนแก้ว</div>
+      </div>
+      <p class="text-right text-xs text-slate-500 mt-3">${printed}</p>
+    </div>`;
+  });
+
+  $('#reportArea').innerHTML = html;
+}
+
+/* ================================================================
+   10) UTILITIES & IMPORT/EXPORT
+================================================================ */
+function openPriceModal() {
+  const box = $('#priceBookBody');
+  box.innerHTML = Object.entries(refPrices).map(([k, v]) => `
+    <div class="grid grid-cols-12 items-center gap-2 border-b border-slate-100 pb-2 text-xs">
+      <div class="col-span-6 font-medium text-navy-800">${esc(k)}</div>
+      <div class="col-span-3">
+        <input type="number" step="any" data-pk="${esc(k)}" value="${v.price}" class="inp !py-1 text-right font-semibold">
+      </div>
+      <div class="col-span-3 text-slate-500">บาท / ${esc(v.unit)}</div>
+    </div>`).join('');
+  const m = $('#priceModal');
+  m.classList.remove('hidden'); m.classList.add('flex');
+}
+function closePriceModal() {
+  const m = $('#priceModal');
+  m.classList.add('hidden'); m.classList.remove('flex');
+}
+function savePriceBookModal() {
+  $$('#priceBookBody [data-pk]').forEach(inp => {
+    const k = inp.dataset.pk;
+    if (refPrices[k]) refPrices[k].price = num(inp.value);
+  });
+  localStorage.setItem(PRICE_KEY, JSON.stringify(refPrices));
+  closePriceModal();
+  syncRefPrices();
+}
+function resetRefPrices() {
+  localStorage.removeItem(PRICE_KEY);
+  loadRefPrices();
+  openPriceModal();
+  toast('คืนค่าตารางราคากลางมาตรฐานแล้ว');
+}
+
+function downloadFile(content, filename, mime) {
+  const blob = new Blob([content], { type: mime });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+
+function exportCSV(all = false) {
+  const list = all ? sortRecs(records) : getFiltered();
+  if (!list.length) return toast('ไม่มีข้อมูลสำหรับส่งออก', 'warn');
+  const head = [
+    'รหัสอ้างอิง', 'ลำดับความต้องการของหมู่บ้าน', 'ปีงบประมาณ (พ.ศ.)', 'หมู่ที่', 'ชื่อหมู่บ้าน',
+    'หมวดหมู่', 'ชื่อโครงการ/รายการ', 'รายละเอียดปริมาณงาน', 'เหตุผลความจำเป็น',
+    'งบประมาณรวม (บาท)', 'ความเร่งด่วน', 'สถานที่ดำเนินการ', 'พิกัด GPS',
+    'ครัวเรือนที่ได้รับประโยชน์', 'ชื่อผู้บันทึก', 'ตำแหน่งผู้บันทึก', 'วันที่บันทึก'
+  ];
+  const rows = list.map(r => [
+    r.id, r.priority || 1, r.year, r.village, VILLAGES[r.village - 1]?.name || '',
+    r.cat === 'infra' ? 'โครงสร้างพื้นฐาน' : 'ครุภัณฑ์',
+    r.title, r.qtyDesc, r.reason, num(r.budget).toFixed(2),
+    URG[r.urgency || 'normal'].label, r.locName, r.gps, r.households || '',
+    r.recordedBy || '', r.recorderRole || '',
+    r.updatedAt ? new Date(r.updatedAt).toLocaleString('th-TH') : ''
+  ]);
+  const csv = '\uFEFF' + [head, ...rows].map(row => row.map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',')).join('\r\n');
+  downloadFile(csv, `แผนพัฒนาท้องถิ่น_ทม.ดอนแก้ว_${Date.now()}.csv`, 'text/csv;charset=utf-8');
+  toast(`ส่งออกไฟล์ CSV เรียบร้อย (${list.length} โครงการ)`);
+}
+
+function backupJSON() {
+  if (!records.length) return toast('ไม่มีข้อมูลสำหรับสำรอง', 'warn');
+  const payload = { version: 4, exportedAt: new Date().toISOString(), exportedBy: currentUser, registeredUsers, refPrices, records };
+  downloadFile(JSON.stringify(payload, null, 2), `สำรองข้อมูลแผนพัฒนา_ทม.ดอนแก้ว.json`, 'application/json');
+  toast('ดาวน์โหลดไฟล์สำรองข้อมูล (.json) เรียบร้อยแล้ว');
+}
+
+function importJSON(file) {
+  if (!file) return;
+  const fr = new FileReader();
+  fr.onload = async () => {
+    try {
+      const o = JSON.parse(fr.result);
+      const arr = Array.isArray(o) ? o : o.records;
+      if (!Array.isArray(arr)) throw new Error('รูปแบบไฟล์ไม่ถูกต้อง');
+      if (Array.isArray(o.registeredUsers)) {
+        o.registeredUsers.forEach(u => {
+          if (u?.name && !registeredUsers.some(x => x.name === u.name)) registeredUsers.push(u);
+        });
+        saveUsersState();
+      }
+      let added = 0;
+      for (const r of arr) {
+        if (r && r.id) {
+          await upsertRecordSafe(r);
+          added++;
+        }
+      }
+      toast(`ผสานข้อมูลสำเร็จ (${added} โครงการ) โดยไม่ลบข้อมูลเดิม`);
+    } catch (e) { toast('นำเข้าไม่สำเร็จ: ' + e.message, 'error'); }
+  };
+  fr.readAsText(file, 'utf-8');
+}
+
+/* ================================================================
+   11) DEMO DATA
+================================================================ */
+function mkDemo(village, priority, year, urgency, cat, comps, locName, hh) {
+  const details = comps.map(c => {
+    const sDef = SUB_DEFS[c.sub];
+    const calc = sDef.calc(c.dims);
+    const unitPrice = c.unitPrice ?? getRefPrice(c.item);
+    const budget = c.lump ? c.lump : calc.q * unitPrice;
+    return { cid: uid(), sub: c.sub, subLabel: sDef.label, dept: sDef.dept, item: c.item, dims: c.dims, unitPrice, bmode: c.lump ? 'lump' : 'calc', lump: c.lump || 0, qty: calc.q, unit: calc.u, qtyDesc: calc.desc, budget };
+  });
+  const totalBudget = details.reduce((s, d) => s + d.budget, 0);
+  const rec = {
+    id: `demo_v${village}_y${year}_p${priority}`,
+    year, village, priority, urgency, cat,
+    sub: details[0].sub,
+    item: details.map(d => d.item).join(' + '),
+    components: details,
+    qty: details.length, unit: 'งาน',
+    qtyDesc: details.map((d, i) => `${details.length > 1 ? `(${i + 1}) ` : ''}${d.item} ${d.qtyDesc}`).join(' • '),
+    budget: totalBudget,
+    locName, start: '', end: '', gps: '',
+    reason: buildAutoReason(details),
+    households: hh,
+    proposer: 'มติที่ประชุมประชาคมหมู่บ้าน',
+    recordedBy: currentUser.name,
+    recorderRole: currentUser.role,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  rec.title = buildAutoTitle(rec, details);
+  return rec;
+}
+
+async function loadDemo() {
+  if (!(await askConfirm('เพิ่มชุดข้อมูลตัวอย่าง 10 หมู่บ้าน', 'ระบบจะเพิ่มโครงการตัวอย่างของทั้ง 10 หมู่บ้านเข้าไปโดยไม่ลบข้อมูลเดิม', 'เพิ่มข้อมูลตัวอย่าง'))) return;
+  const demos = [
+    mkDemo(1, 1, 2571, 'high', 'infra', [
+      { sub: 'road', item: 'ก่อสร้างถนนคอนกรีตเสริมเหล็ก (คสล.)', dims: { width: 4, length: 180, thick: 0.15 } },
+      { sub: 'drain', item: 'ก่อสร้างรางระบายน้ำ คสล. รูปตัวยู พร้อมฝาปิด', dims: { width: 0.4, length: 180, manhole: 6 } }
+    ], 'ซอย 3 บ้านบ่อปุ๊', 65),
+    mkDemo(2, 1, 2571, 'high', 'infra', [
+      { sub: 'road', item: 'ปรับปรุงผิวจราจรแอสฟัลต์ติกคอนกรีต (Overlay)', dims: { width: 5, length: 250, thick: 0.05 } },
+      { sub: 'light', item: 'ติดตั้งโคมไฟถนน LED', dims: { count: 12, dist: 250 } }
+    ], 'สายหลักบ้านดอนแก้ว', 120),
+    mkDemo(3, 1, 2571, 'high', 'infra', [
+      { sub: 'water', item: 'ขยายเขตท่อเมนประปา', dims: { size: 2, amount: 450 } }
+    ], 'ซอย 5 บ้านศาลา', 45),
+    mkDemo(4, 1, 2572, 'high', 'infra', [
+      { sub: 'road', item: 'ก่อสร้างถนนลาดยางแอสฟัลต์ติกคอนกรีต', dims: { width: 5, length: 300, thick: 0.05 } }
+    ], 'สายบ้านป่าแงะ-ทุ่งนา', 90),
+    mkDemo(5, 1, 2572, 'mid', 'equip', [
+      { sub: 'equip_item', item: 'เครื่องออกกำลังกายกลางแจ้ง', dims: { spec: 'ชุดมาตรฐาน 8 สถานี', qty: 1, unit: 'ชุด' } }
+    ], 'ลานอเนกประสงค์บ้านพระนอน', 280),
+    mkDemo(6, 1, 2573, 'high', 'infra', [
+      { sub: 'drain', item: 'ก่อสร้างท่อลอดเหลี่ยม คสล.', dims: { width: 1.8, length: 8 }, lump: 420000 }
+    ], 'จุดตัดลำเหมืองบ้านป่ารวก', 110),
+    mkDemo(7, 1, 2573, 'mid', 'infra', [
+      { sub: 'light', item: 'ติดตั้งไฟส่องสว่างพลังงานแสงอาทิตย์ (โซลาร์เซลล์)', dims: { count: 15, dist: 500 } }
+    ], 'ถนนสายเลียบคลองบ้านสันเหมือง', 85),
+    mkDemo(8, 1, 2574, 'high', 'infra', [
+      { sub: 'water', item: 'ขุดเจาะบ่อบาดาล', dims: { size: 6, amount: 1 }, lump: 450000 }
+    ], 'บริเวณประปาหมู่บ้านชะเยือง', 150),
+    mkDemo(9, 1, 2574, 'high', 'infra', [
+      { sub: 'road', item: 'ก่อสร้างถนนคอนกรีตเสริมเหล็ก (คสล.)', dims: { width: 5, length: 220, thick: 0.15 } }
+    ], 'สายเชื่อมสบสา-หนองฟาน', 140),
+    mkDemo(10, 1, 2575, 'mid', 'infra', [
+      { sub: 'building', item: 'ก่อสร้างศาลาอเนกประสงค์', dims: { width: 8, length: 12, count: 1 } }
+    ], 'ที่ดินสาธารณะบ้านพระเจ้านั่งโก๋น', 260)
+  ];
+
+  for (const d of demos) await upsertRecordSafe(d);
+  showTab('dashboard');
+  toast('เพิ่มข้อมูลตัวอย่างครบทั้ง 10 หมู่บ้านเรียบร้อยแล้ว');
+}
+
+/* ================================================================
+   12) UI HELPERS & INITIALIZATION
+================================================================ */
+function showTab(name) {
+  $$('.tab').forEach(t => t.classList.toggle('hidden', t.id !== 'tab-' + name));
+  $$('.tabbtn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  if (name === 'report') renderReport();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toast(msg, type = 'success') {
+  const c = { success: 'bg-emerald-600', error: 'bg-red-600', warn: 'bg-amber-500', info: 'bg-navy-700' }[type];
+  const el = document.createElement('div');
+  el.className = `${c} text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 text-sm max-w-sm transition-all duration-300`;
+  el.innerHTML = `<span>${esc(msg)}</span>`;
+  $('#toasts').appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3500);
+}
+
+function askConfirm(title, msg, okText = 'ยืนยัน') {
+  return new Promise(res => {
+    $('#mTitle').textContent = title;
+    $('#mMsg').textContent = msg || '';
+    $('#mOk').textContent = okText;
+    const m = $('#modal');
+    m.classList.remove('hidden'); m.classList.add('flex');
+    const close = v => { m.classList.add('hidden'); m.classList.remove('flex'); res(v); };
+    $('#mOk').onclick = () => close(true);
+    $('#mCancel').onclick = () => close(false);
+  });
+}
+
+function getGPS() {
+  if (!navigator.geolocation) return toast('เบราว์เซอร์ไม่รองรับ GPS', 'warn');
+  navigator.geolocation.getCurrentPosition(
+    p => { $('#f_gps').value = `${p.coords.latitude.toFixed(6)}, ${p.coords.longitude.toFixed(6)}`; toast('ดึงพิกัด GPS เรียบร้อยแล้ว'); },
+    e => toast('ไม่สามารถดึงพิกัดได้: ' + e.message, 'error')
+  );
+}
+
+function fillSelects() {
+  const vOpts = VILLAGES.map(v => `<option value="${v.no}">${vLabel(v.no)}</option>`).join('');
+  $('#f_village').innerHTML = '<option value="">— เลือกหมู่บ้าน —</option>' + vOpts;
+  ['#d_village', '#t_village', '#r_village'].forEach(s => $(s).innerHTML = '<option value="">ทุกหมู่บ้าน (ทั้งตำบล)</option>' + vOpts);
+  $('#f_year').innerHTML = YEARS.map(y => `<option value="${y}">พ.ศ. ${y}</option>`).join('');
+  ['#d_year', '#t_year', '#r_year'].forEach(s => $(s).innerHTML = '<option value="">ทุกปีงบประมาณ (2571–2575)</option>' + YEARS.map(y => `<option value="${y}">ปีงบประมาณ ${y}</option>`).join(''));
+}
+
+function refreshAll() {
+  renderDashboard();
+  renderTable();
+  renderReport();
+  $('#cntBadge').textContent = records.length;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  $('#todayTxt').textContent = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+  fillSelects();
+  loadState();
+  updateUserBadge();
+  updateCloudBadgeUI();
+  resetForm(true);
+
+  $$('.tabbtn').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+
+  $('#f_village').addEventListener('change', () => { autoNextPriority(); updatePreview(); });
+  $('#f_year').addEventListener('change', () => { autoNextPriority(); updatePreview(); });
+  $('#f_priority').addEventListener('input', updatePreview);
+
+  $$('input[name="f_cat"]').forEach(r => r.addEventListener('change', e => {
+    workComponents = [defaultComponent(e.target.value)];
+    renderComponents();
+    if (reasonAuto) regenReason();
+    updatePreview();
+  }));
+
+  $$('input[name="f_urgency"]').forEach(r => r.addEventListener('change', updatePreview));
+  $('#f_locName').addEventListener('input', updatePreview);
+  $('#f_households').addEventListener('input', updatePreview);
+  $('#f_title').addEventListener('input', () => { titleAuto = false; updateTitleBadge(); updatePreview(); });
+  $('#f_reason').addEventListener('input', () => { reasonAuto = false; updateReasonBadge(); });
+
+  ['#t_search', '#t_village', '#t_year', '#t_cat', '#t_recorder'].forEach(s => $(s).addEventListener('input', renderTable));
+  ['#d_year', '#d_village'].forEach(s => $(s).addEventListener('change', renderDashboard));
+  ['#r_village', '#r_year', '#r_cat'].forEach(s => $(s).addEventListener('change', renderReport));
+
+  refreshAll();
+});
+</script>
+</body>
+</html>
